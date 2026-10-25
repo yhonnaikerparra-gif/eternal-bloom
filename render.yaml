@@ -1,0 +1,37 @@
+services:
+  - type: web
+    name: eternal-bloom
+    env: node
+    plan: free
+    region: oregon
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3001
+      - key: TIMEZONE
+        value: America/Bogota
+      - key: CRON_SCHEDULE
+        value: "0 5 * * *"
+      - key: ADMIN_PASSWORD
+        generateValue: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: GMAIL_USER
+        sync: false
+      - key: GMAIL_APP_PASSWORD
+        sync: false
+      - key: GMAIL_SENDER_NAME
+        value: "ETERNAL BLOOM"
+      - key: WHATSAPP_TOKEN
+        sync: false
+      - key: WHATSAPP_PHONE_NUMBER_ID
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+    disk:
+      name: eternal-bloom-data
+      mountPath: /app/server/data
+      sizeGB: 1
