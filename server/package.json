@@ -7,6 +7,8 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
+    "dispatch": "node dist/cli/dispatchNow.js",
+    "dispatch:test": "node dist/cli/dispatchNow.js --test",
     "test": "vitest run"
   },
   "dependencies": {
