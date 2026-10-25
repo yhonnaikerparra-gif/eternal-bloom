@@ -164,13 +164,19 @@ export class Dispatcher {
 
       // 5. Execute transmission via WhatsApp (Primary)
       if (channel === 'WHATSAPP' || channel === 'BOTH') {
+        const publicUrl =
+          settings.public_web_url ||
+          process.env.PUBLIC_URL ||
+          process.env.RENDER_EXTERNAL_URL;
+
         const waResult = await WhatsAppService.sendLetter(
           settings.recipient_whatsapp,
           settings.recipient_name,
           letter.title,
           letter.content,
           settings.signature_name,
-          friendlyDate
+          friendlyDate,
+          publicUrl
         );
 
         if (waResult.success) {

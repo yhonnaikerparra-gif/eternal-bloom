@@ -10,6 +10,7 @@ import { lettersRouter } from './routes/lettersRoutes.js';
 import { gardenRouter } from './routes/gardenRoutes.js';
 import { adminRouter } from './routes/adminRoutes.js';
 import { webhookRouter } from './routes/webhookRoutes.js';
+import { recipientRouter } from './routes/recipientRoutes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -22,6 +23,7 @@ app.use(express.json());
 
 // API Routes
 app.use('/api/auth', authRouter);
+app.use('/api/recipient', recipientRouter);
 app.use('/api/letters', lettersRouter);
 app.use('/api/garden', gardenRouter);
 app.use('/api/admin', adminRouter);
@@ -49,24 +51,29 @@ app.get('*', (req, res, next) => {
 
 // Initialize database & persistent scheduler
 getDatabase();
-Scheduler.init();
 
-const server = app.listen(config.port, () => {
-  console.log(`🌸 ETERNAL BLOOM server running on http://localhost:${config.port}`);
-  console.log(`⏰ Scheduler configured for 05:00 AM (${config.timezone})`);
-});
+let server: any;
+if (process.env.NODE_ENV !== 'test') {
+  Scheduler.init();
+  server = app.listen(config.port, () => {
+    console.log(`🌸 MI VIDA ETERNA server running on port ${config.port}`);
+    console.log(`⏰ Scheduler configured for 05:00 AM (${config.timezone})`);
+  });
+}
 
 // Graceful shutdown
 process.on('SIGINT', () => {
   console.log('Shutting down server gracefully...');
   closeDatabase();
-  server.close(() => process.exit(0));
+  if (server) server.close(() => process.exit(0));
+  else process.exit(0);
 });
 
 process.on('SIGTERM', () => {
   console.log('Shutting down server gracefully...');
   closeDatabase();
-  server.close(() => process.exit(0));
+  if (server) server.close(() => process.exit(0));
+  else process.exit(0);
 });
 
 export default app;

@@ -7,13 +7,17 @@ interface LetterModalProps {
   letter?: Letter | null;
   onClose: () => void;
   signatureName?: string;
+  recipientName?: string;
+  recipientWhatsapp?: string;
 }
 
 export const LetterModal: React.FC<LetterModalProps> = ({
   element,
   letter: directLetter,
   onClose,
-  signatureName = 'Por siempre tuyo'
+  signatureName = 'Por siempre tuyo',
+  recipientName = 'Mi Amor',
+  recipientWhatsapp = ''
 }) => {
   const letter = directLetter || element?.letter;
 
@@ -29,6 +33,14 @@ export const LetterModal: React.FC<LetterModalProps> = ({
 
   const isStar = element?.element_type === 'STAR';
   const isProtagonist = element?.element_type === 'PROTAGONIST_FLOWER' || letter.id === 'initial-bloom';
+
+  // Dynamic origin URL for the public webpage
+  const webUrl = typeof window !== 'undefined' ? window.location.origin : 'https://mi-vida-eterna.onrender.com';
+  const cleanPhone = recipientWhatsapp ? recipientWhatsapp.replace(/[^\d]/g, '') : '';
+  const waReminderMessage = `🌸 *MI VIDA ETERNA* 🌸\n_${formattedDate}_\n\n*${letter.title || 'Carta de Amor'}*\n\nQuerida ${recipientName},\n\n"${letter.content}"\n\n🌹 *Una nueva flor ha florecido hoy para ti en nuestro jardín eterno.*\n\n✨ Entra a nuestro mundo y mira florecer tu amor:\n👉 ${webUrl}\n\nCon todo mi corazón,\n*${signatureName}* ❤️`;
+  const waUrl = cleanPhone
+    ? `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(waReminderMessage)}`
+    : `https://api.whatsapp.com/send?text=${encodeURIComponent(waReminderMessage)}`;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md animate-fade-in">
@@ -106,9 +118,7 @@ export const LetterModal: React.FC<LetterModalProps> = ({
         {/* WhatsApp Send Action Button */}
         <div className="mt-6 pt-4 border-t border-rose-200/40 flex justify-center">
           <a
-            href={`https://api.whatsapp.com/send?text=${encodeURIComponent(
-              `🌸 *MI VIDA ETERNA* 🌸\n_${formattedDate}_\n\n*${letter.title || 'Carta de Amor'}*\n\n"${letter.content}"\n\n🌹 *Una nueva flor ha florecido hoy para ti en nuestro jardín eterno.*\n\nCon todo mi amor,\n*${signatureName}* ❤️`
-            )}`}
+            href={waUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold tracking-wide shadow-md shadow-emerald-600/20 transition-all active:scale-95"

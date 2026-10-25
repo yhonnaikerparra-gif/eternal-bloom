@@ -1,12 +1,14 @@
 export const SCHEMA_SQL = `
 CREATE TABLE IF NOT EXISTS settings (
   id INTEGER PRIMARY KEY CHECK (id = 1),
-  app_title TEXT DEFAULT 'ETERNAL BLOOM',
+  app_title TEXT DEFAULT 'MI VIDA ETERNA',
   recipient_name TEXT DEFAULT 'Mi Amor',
   recipient_nickname TEXT DEFAULT 'Cariño',
   recipient_whatsapp TEXT DEFAULT '',
   recipient_email TEXT DEFAULT '',
-  primary_channel TEXT DEFAULT 'GMAIL',
+  recipient_access_code TEXT DEFAULT '',
+  public_web_url TEXT DEFAULT '',
+  primary_channel TEXT DEFAULT 'WHATSAPP',
   fallback_channel_enabled INTEGER DEFAULT 0,
   timezone TEXT DEFAULT 'America/Bogota',
   daily_time TEXT DEFAULT '05:00',

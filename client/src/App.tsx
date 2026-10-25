@@ -1,18 +1,24 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
-  Heart, BookOpen, Settings, Sun, Moon, Sparkles, Send, Flame
+  Heart, BookOpen, Settings, Sun, Moon, Sparkles, Send, Flame, Lock
 } from 'lucide-react';
 import { RomanticScene } from './3d/RomanticScene.js';
-import { api, GardenState, VisualElement, Letter } from './services/api.js';
+import { api, GardenState, VisualElement, Letter, RecipientProfile, RecipientStatus } from './services/api.js';
 import { LetterModal } from './components/LetterModal.js';
 import { HistoryDrawer } from './components/HistoryDrawer.js';
 import { AdminPanel } from './components/AdminPanel.js';
 import { MilestoneBanner } from './components/MilestoneBanner.js';
 import { AudioPlayer } from './components/AudioPlayer.js';
+import { RecipientAccessModal } from './components/RecipientAccessModal.js';
 
 export const App: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<RomanticScene | null>(null);
+
+  // Recipient Authentication State
+  const [recipient, setRecipient] = useState<RecipientProfile | null>(api.getStoredRecipient());
+  const [recipientStatus, setRecipientStatus] = useState<RecipientStatus | null>(null);
+  const [isRecipientModalOpen, setIsRecipientModalOpen] = useState(false);
 
   // Data state
   const [gardenState, setGardenState] = useState<GardenState>({
@@ -35,7 +41,7 @@ export const App: React.FC = () => {
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [isNightMode, setIsNightMode] = useState(false);
 
-  // Initialize 3D Scene
+  // Initialize 3D Scene and Recipient Session
   useEffect(() => {
     if (!containerRef.current) return;
 
@@ -47,12 +53,45 @@ export const App: React.FC = () => {
     sceneRef.current = scene;
 
     loadInitialData();
+    checkRecipientAuth();
 
     return () => {
       scene.destroy();
       sceneRef.current = null;
     };
   }, []);
+
+  const checkRecipientAuth = async () => {
+    try {
+      const status = await api.getRecipientStatus();
+      setRecipientStatus(status);
+      if (status.recipientName) {
+        setRecipientName(status.recipientName);
+      }
+
+      const verifyRes = await api.verifyRecipient();
+      if (verifyRes.valid && verifyRes.recipient) {
+        setRecipient(verifyRes.recipient);
+      } else {
+        // If not authenticated, open login modal
+        setIsRecipientModalOpen(true);
+      }
+    } catch (e) {
+      console.warn('Could not check recipient auth:', e);
+    }
+  };
+
+  const handleRecipientSuccess = (newRecipient: RecipientProfile) => {
+    setRecipient(newRecipient);
+    setRecipientName(newRecipient.name);
+    setIsRecipientModalOpen(false);
+    loadInitialData();
+
+    // Focus camera and open today's letter with love
+    setTimeout(() => {
+      handleOpenLatestLetter();
+    }, 600);
+  };
 
   const loadInitialData = async () => {
     try {
@@ -150,6 +189,27 @@ export const App: React.FC = () => {
 
       {/* Top Right Utility Controls */}
       <div className="absolute top-6 right-6 z-20 flex items-center gap-2.5">
+        {/* Recipient Profile & Access Pill */}
+        {recipient ? (
+          <button
+            onClick={() => setIsRecipientModalOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-rose-950/70 backdrop-blur-md border border-rose-500/40 text-xs font-medium text-rose-200 hover:text-white hover:bg-rose-900/60 transition-all shadow-lg active:scale-95"
+            title="Tu clave está activa. Clic para ver tus datos."
+          >
+            <Heart className="w-3.5 h-3.5 text-rose-400 fill-rose-400 animate-pulse" />
+            <span className="max-w-[120px] truncate">{recipient.name}</span>
+          </button>
+        ) : (
+          <button
+            onClick={() => setIsRecipientModalOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-rose-600/90 hover:bg-rose-500 text-white text-xs font-semibold shadow-lg shadow-rose-600/30 transition-all active:scale-95"
+            title="Iniciar sesión con tu número y clave de acceso"
+          >
+            <Lock className="w-3.5 h-3.5" />
+            <span>Iniciar Sesión</span>
+          </button>
+        )}
+
         {/* Soft Ambient Chime Player */}
         <AudioPlayer />
 
@@ -252,8 +312,20 @@ export const App: React.FC = () => {
           element={selectedElement}
           letter={selectedLetter}
           onClose={() => setIsLetterModalOpen(false)}
+          recipientName={recipient?.name || recipientName}
+          recipientWhatsapp={recipient?.whatsapp || recipientStatus?.recipientWhatsapp || ''}
         />
       )}
+
+      {/* Recipient Login / Setup Modal */}
+      <RecipientAccessModal
+        isOpen={isRecipientModalOpen}
+        onClose={() => setIsRecipientModalOpen(false)}
+        onSuccess={handleRecipientSuccess}
+        defaultRecipientName={recipient?.name || recipientName}
+        defaultWhatsapp={recipient?.whatsapp || recipientStatus?.recipientWhatsapp || ''}
+        isInitialConfig={!recipientStatus?.isConfigured}
+      />
 
       {/* Letter Archive Drawer */}
       <HistoryDrawer

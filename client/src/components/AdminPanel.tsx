@@ -321,6 +321,48 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   </div>
 
                   <div>
+                    <label className="block text-xs font-medium text-slate-300 mb-1">
+                      Clave Secreta de Acceso para tu Pareja (mínimo 6 dígitos)
+                    </label>
+                    <input
+                      type="text"
+                      value={settings.recipient_access_code || ''}
+                      onChange={(e) => setSettings({ ...settings, recipient_access_code: e.target.value })}
+                      placeholder="Ejemplo: 123456 o fecha especial"
+                      minLength={6}
+                      className="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-lg text-sm text-white focus:outline-none focus:border-rose-500 font-mono"
+                    />
+                    <p className="text-[11px] text-slate-400 mt-1">
+                      Tu pareja iniciará sesión con su número de WhatsApp y esta clave secreta de mínimo 6 dígitos.
+                    </p>
+                  </div>
+
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="block text-xs font-medium text-slate-300">
+                        URL Pública de la Web (para WhatsApp)
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setSettings({ ...settings, public_web_url: typeof window !== 'undefined' ? window.location.origin : '' })}
+                        className="text-[11px] text-rose-400 hover:text-rose-300 underline"
+                      >
+                        Usar URL actual
+                      </button>
+                    </div>
+                    <input
+                      type="text"
+                      value={settings.public_web_url || ''}
+                      onChange={(e) => setSettings({ ...settings, public_web_url: e.target.value })}
+                      placeholder="https://mi-vida-eterna.onrender.com"
+                      className="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-lg text-sm text-white focus:outline-none focus:border-rose-500 font-mono"
+                    />
+                    <p className="text-[11px] text-slate-400 mt-1">
+                      Esta es la URL que tu pareja abrirá en su teléfono al hacer clic en el mensaje de WhatsApp.
+                    </p>
+                  </div>
+
+                  <div>
                     <label className="block text-xs font-medium text-slate-300 mb-1">Firma Personal en la Carta</label>
                     <input
                       type="text"
@@ -489,7 +531,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                       href={`https://api.whatsapp.com/send?${
                         settings.recipient_whatsapp ? `phone=${settings.recipient_whatsapp.replace(/[^0-9]/g, '')}&` : ''
                       }text=${encodeURIComponent(
-                        `🌸 *MI VIDA ETERNA* 🌸\n\nQuerida ${settings.recipient_name || 'Mi Amor'},\n\n🌹 *Una nueva flor ha florecido hoy para ti en nuestro jardín eterno.*\n\n✨ Entra a nuestro mundo para verla florecer:\n👉 http://localhost:3001\n\nCon todo mi corazón,\n*${settings.signature_name || 'Por siempre tuyo'}* ❤️`
+                        `🌸 *MI VIDA ETERNA* 🌸\n\nQuerida ${settings.recipient_name || 'Mi Amor'},\n\n🌹 *Una nueva flor ha florecido hoy para ti en nuestro jardín eterno.*\n\n✨ Entra a nuestro mundo para verla florecer:\n👉 ${settings.public_web_url || (typeof window !== 'undefined' ? window.location.origin : 'https://mi-vida-eterna.onrender.com')}\n\nCon todo mi corazón,\n*${settings.signature_name || 'Por siempre tuyo'}* ❤️`
                       )}`}
                       target="_blank"
                       rel="noopener noreferrer"

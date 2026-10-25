@@ -22,18 +22,32 @@ export function getDatabase(): Database.Database {
   // Initialize Schema
   db.exec(SCHEMA_SQL);
 
+  // Safe migrations for newly added columns
+  try {
+    db.exec("ALTER TABLE settings ADD COLUMN recipient_access_code TEXT DEFAULT ''");
+  } catch {
+    // Column already exists
+  }
+  try {
+    db.exec("ALTER TABLE settings ADD COLUMN public_web_url TEXT DEFAULT ''");
+  } catch {
+    // Column already exists
+  }
+
   // Initialize Default Settings (id = 1)
   const existingSettings = db.prepare('SELECT id FROM settings WHERE id = 1').get();
   if (!existingSettings) {
     db.prepare(`
       INSERT INTO settings (
         id, app_title, recipient_name, recipient_nickname, recipient_whatsapp,
-        recipient_email, primary_channel, fallback_channel_enabled, timezone,
-        daily_time, is_active, ai_enabled, signature_name, updated_at
+        recipient_email, recipient_access_code, public_web_url, primary_channel,
+        fallback_channel_enabled, timezone, daily_time, is_active, ai_enabled,
+        signature_name, updated_at
       ) VALUES (
         1, 'MI VIDA ETERNA', 'Mi Amor', 'Cariño', '',
-        '', 'WHATSAPP', 0, 'America/Bogota',
-        '05:00', 1, 0, 'Por siempre tuyo', datetime('now')
+        '', '', '', 'WHATSAPP',
+        0, 'America/Bogota', '05:00', 1, 0,
+        'Por siempre tuyo', datetime('now')
       )
     `).run();
   }

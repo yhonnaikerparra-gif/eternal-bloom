@@ -32,7 +32,11 @@ export class WhatsAppService {
     dateString: string,
     webUrl?: string
   ): string {
-    const appUrl = webUrl || 'http://localhost:3001';
+    const appUrl =
+      (webUrl && webUrl.trim()) ||
+      process.env.PUBLIC_URL ||
+      process.env.RENDER_EXTERNAL_URL ||
+      'https://mi-vida-eterna.onrender.com';
 
     return `🌸 *MI VIDA ETERNA* 🌸\n_${dateString}_\n\n*${title}*\n\nQuerida ${recipientName},\n\n"${content}"\n\n🌹 *Una nueva flor ha florecido hoy para ti en nuestro jardín eterno.*\n\n✨ Entra a nuestro mundo y mira tu jardín crecer:\n👉 ${appUrl}\n\nCon todo mi corazón,\n*${signatureName}* ❤️`;
   }

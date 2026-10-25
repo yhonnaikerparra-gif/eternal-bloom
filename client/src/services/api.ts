@@ -47,6 +47,21 @@ export interface Letter {
   flower_variety?: string;
 }
 
+export interface RecipientProfile {
+  name: string;
+  whatsapp: string;
+}
+
+export interface RecipientStatus {
+  isConfigured: boolean;
+  recipientName: string;
+  recipientNickname: string;
+  recipientWhatsapp: string;
+  hasAccessCode: boolean;
+  publicWebUrl: string;
+  isActive: boolean;
+}
+
 function getAuthHeader(): Record<string, string> {
   const token = localStorage.getItem('eternal_bloom_token');
   return token ? { Authorization: `Bearer ${token}` } : {};
@@ -76,6 +91,68 @@ export const api = {
     const res = await fetch(`${API_BASE}/letters/history`);
     if (!res.ok) throw new Error('Failed to load letter history');
     return res.json();
+  },
+
+  // Recipient Auth & Experience Portal
+  async getRecipientStatus(): Promise<RecipientStatus> {
+    const res = await fetch(`${API_BASE}/recipient/status`);
+    if (!res.ok) throw new Error('Error al consultar estado del destinatario');
+    return res.json();
+  },
+
+  async accessRecipient(data: {
+    name?: string;
+    whatsapp: string;
+    accessCode: string;
+    publicWebUrl?: string;
+  }): Promise<{ success: boolean; token: string; recipient: RecipientProfile; message: string }> {
+    const res = await fetch(`${API_BASE}/recipient/access`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    const result = await res.json();
+    if (!res.ok) throw new Error(result.error || 'Error al iniciar sesión');
+    localStorage.setItem('mve_recipient_auth', JSON.stringify({
+      token: result.token,
+      recipient: result.recipient
+    }));
+    return result;
+  },
+
+  async verifyRecipient(): Promise<{ valid: boolean; recipient?: RecipientProfile }> {
+    const stored = localStorage.getItem('mve_recipient_auth');
+    if (!stored) return { valid: false };
+    try {
+      const parsed = JSON.parse(stored);
+      if (!parsed.token) return { valid: false };
+      const res = await fetch(`${API_BASE}/recipient/verify`, {
+        headers: { Authorization: `Bearer ${parsed.token}` },
+      });
+      if (!res.ok) {
+        localStorage.removeItem('mve_recipient_auth');
+        return { valid: false };
+      }
+      return res.json();
+    } catch {
+      localStorage.removeItem('mve_recipient_auth');
+      return { valid: false };
+    }
+  },
+
+  getStoredRecipient(): RecipientProfile | null {
+    const stored = localStorage.getItem('mve_recipient_auth');
+    if (!stored) return null;
+    try {
+      const parsed = JSON.parse(stored);
+      return parsed.recipient || null;
+    } catch {
+      return null;
+    }
+  },
+
+  logoutRecipient(): void {
+    localStorage.removeItem('mve_recipient_auth');
   },
 
   // Auth & Admin
