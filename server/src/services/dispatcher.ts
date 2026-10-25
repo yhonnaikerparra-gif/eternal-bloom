@@ -237,12 +237,11 @@ export class Dispatcher {
 
         // ONLY non-test dispatches create visual elements!
         if (!isTest) {
-          const countRow = db.prepare(`
-            SELECT COUNT(*) as count FROM dispatch_logs 
-            WHERE delivery_status = 'SENT' AND is_test = 0
-          `).get() as { count: number };
+          const maxOrderRow = db.prepare(`
+            SELECT COALESCE(MAX(birth_order), 0) + 1 as next_order FROM garden_elements
+          `).get() as { next_order: number };
 
-          const birthOrder = countRow.count; // Exact order of confirmed dispatch
+          const birthOrder = maxOrderRow.next_order; // Guarantees unique next birth order
           const visualElement = GardenService.createVisualElementForLetter(letter.id, birthOrder);
           flowerCreated = true;
           elementId = visualElement.id;

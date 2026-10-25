@@ -14,5 +14,15 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
+    chunkSizeWarningLimit: 2000,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          three: ['three'],
+          vendor: ['react', 'react-dom'],
+          ui: ['lucide-react', 'canvas-confetti'],
+        },
+      },
+    },
   },
 });
