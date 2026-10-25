@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: eternal-bloom
+    name: mi-vida-eterna
     env: node
     plan: free
     region: oregon
@@ -24,7 +24,7 @@ services:
       - key: GMAIL_APP_PASSWORD
         sync: false
       - key: GMAIL_SENDER_NAME
-        value: "ETERNAL BLOOM"
+        value: "MI VIDA ETERNA"
       - key: WHATSAPP_TOKEN
         sync: false
       - key: WHATSAPP_PHONE_NUMBER_ID

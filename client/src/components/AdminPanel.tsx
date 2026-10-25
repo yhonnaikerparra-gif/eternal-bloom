@@ -174,7 +174,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               <ShieldCheck className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-base sm:text-lg font-semibold text-white">Panel de Control ETERNAL BLOOM</h2>
+              <h2 className="text-base sm:text-lg font-semibold text-white">Panel de Control MI VIDA ETERNA</h2>
               <p className="text-xs text-slate-400">Administración de envíos a las 5:00 a. m. (America/Bogota)</p>
             </div>
           </div>

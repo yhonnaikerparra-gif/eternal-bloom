@@ -88,7 +88,7 @@ export class WhatsAppService {
       };
     }
 
-    const formattedBody = `🌸 *ETERNAL BLOOM* 🌸\n_${dateString}_\n\n*${title}*\n\nQuerida ${recipientName},\n\n${content}\n\nCon todo mi amor,\n*${signatureName}* 🌹\n\n_(Una nueva flor ha brotado hoy en nuestro jardín)_`;
+    const formattedBody = `🌸 *MI VIDA ETERNA* 🌸\n_${dateString}_\n\n*${title}*\n\nQuerida ${recipientName},\n\n${content}\n\nCon todo mi amor,\n*${signatureName}* 🌹\n\n_(Una nueva flor ha brotado hoy en nuestro jardín)_`;
 
     try {
       // Direct text payload (standard format)

@@ -31,7 +31,7 @@ export function getDatabase(): Database.Database {
         recipient_email, primary_channel, fallback_channel_enabled, timezone,
         daily_time, is_active, ai_enabled, signature_name, updated_at
       ) VALUES (
-        1, 'ETERNAL BLOOM', 'Mi Amor', 'Cariño', '',
+        1, 'MI VIDA ETERNA', 'Mi Amor', 'Cariño', '',
         '', 'GMAIL', 0, 'America/Bogota',
         '05:00', 1, 0, 'Por siempre tuyo', datetime('now')
       )

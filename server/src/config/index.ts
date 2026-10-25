@@ -28,7 +28,7 @@ export const config = {
   gmail: {
     user: process.env.GMAIL_USER || '',
     appPassword: process.env.GMAIL_APP_PASSWORD || '',
-    senderName: process.env.GMAIL_SENDER_NAME || 'ETERNAL BLOOM',
+    senderName: process.env.GMAIL_SENDER_NAME || 'MI VIDA ETERNA',
     clientId: process.env.GMAIL_CLIENT_ID || '',
     clientSecret: process.env.GMAIL_CLIENT_SECRET || '',
     refreshToken: process.env.GMAIL_REFRESH_TOKEN || '',

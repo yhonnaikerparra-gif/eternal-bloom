@@ -58,7 +58,7 @@ export class GmailService {
     <tr>
       <td align="center" style="padding: 35px 30px 15px 30px; background: linear-gradient(180deg, #FDF7F2 0%, #FFFDF9 100%); border-bottom: 1px solid #F3ECE4;">
         <span style="display: inline-block; font-size: 28px; line-height: 1; margin-bottom: 8px;">🌸</span>
-        <h2 style="margin: 0; color: #881337; font-size: 13px; text-transform: uppercase; letter-spacing: 3px; font-family: 'Helvetica Neue', sans-serif; font-weight: 600;">ETERNAL BLOOM</h2>
+        <h2 style="margin: 0; color: #881337; font-size: 13px; text-transform: uppercase; letter-spacing: 3px; font-family: 'Helvetica Neue', sans-serif; font-weight: 600;">MI VIDA ETERNA</h2>
         <p style="margin: 6px 0 0 0; color: #9C7D73; font-size: 12px; letter-spacing: 1px; font-style: italic;">${dateString}</p>
       </td>
     </tr>
@@ -149,13 +149,13 @@ export class GmailService {
     }
 
     const html = this.buildRomanticHtml(recipientName, title, content, signatureName, dateString);
-    const plainText = `ETERNAL BLOOM - ${dateString}\n\n${title}\n\nQuerida ${recipientName},\n\n${content}\n\nCon todo mi corazón,\n${signatureName} 🌹\n\n(Una nueva flor ha florecido hoy para ti en nuestro jardín)`;
+    const plainText = `MI VIDA ETERNA - ${dateString}\n\n${title}\n\nQuerida ${recipientName},\n\n${content}\n\nCon todo mi corazón,\n${signatureName} 🌹\n\n(Una nueva flor ha florecido hoy para ti en nuestro jardín)`;
 
     try {
       const info = await transporter.sendMail({
         from: `"${config.gmail.senderName}" <${config.gmail.user}>`,
         to: toEmail,
-        subject: `🌸 ${title} — Eternal Bloom`,
+        subject: `🌸 ${title} — Mi Vida Eterna`,
         text: plainText,
         html: html,
       });

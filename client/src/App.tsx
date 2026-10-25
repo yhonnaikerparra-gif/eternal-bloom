@@ -134,7 +134,7 @@ export const App: React.FC = () => {
         <div className="flex items-center gap-2 mb-1">
           <span className="text-xl">🌸</span>
           <h1 className="text-xl sm:text-2xl font-display font-bold tracking-widest text-white drop-shadow-md">
-            ETERNAL BLOOM
+            MI VIDA ETERNA
           </h1>
         </div>
         <p className="text-xs text-rose-200/80 font-serif italic tracking-wide drop-shadow">

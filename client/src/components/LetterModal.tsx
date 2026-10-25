@@ -57,7 +57,7 @@ export const LetterModal: React.FC<LetterModalProps> = ({
             )}
           </div>
           <span className="block text-xs uppercase tracking-widest font-semibold text-rose-900/70 font-sans">
-            ETERNAL BLOOM {element && `— Carta #${element.birth_order}`}
+            MI VIDA ETERNA {element && `— Carta #${element.birth_order}`}
           </span>
           <div className="flex items-center justify-center gap-1.5 mt-1 text-xs text-amber-900/60 font-serif italic">
             <Calendar className="w-3.5 h-3.5" />
