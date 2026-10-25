@@ -31,7 +31,3 @@ services:
         sync: false
       - key: GEMINI_API_KEY
         sync: false
-    disk:
-      name: eternal-bloom-data
-      mountPath: /app/server/data
-      sizeGB: 1

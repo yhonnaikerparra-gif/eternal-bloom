@@ -13,7 +13,7 @@
     "build:server": "npm run build --workspace=server",
     "build:client": "npm run build --workspace=client",
     "build": "npm run build:client && npm run build:server",
-    "start": "npm run start --workspace=server",
+    "start": "node server/dist/index.js",
     "test": "npm run test --workspace=server"
   },
   "devDependencies": {
