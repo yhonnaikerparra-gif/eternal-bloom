@@ -250,7 +250,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 { id: 'DESTINATARIO', label: 'Destinatario', icon: Heart },
                 { id: 'PROGRAMACION', label: 'Programación 5 AM', icon: Calendar },
                 { id: 'CARTAS', label: 'Cartas y Redacción', icon: MessageSquare },
-                { id: 'INTEGRACIONES', label: 'WhatsApp & Gmail', icon: Mail },
+                { id: 'INTEGRACIONES', label: 'WhatsApp', icon: MessageSquare },
                 { id: 'SIMULACION', label: 'Simulador 3D', icon: Eye },
               ].map((tab) => {
                 const Icon = tab.icon;
@@ -305,40 +305,19 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs font-medium text-slate-300 mb-1">Correo Electrónico (Gmail)</label>
-                      <input
-                        type="email"
-                        value={settings.recipient_email || ''}
-                        onChange={(e) => setSettings({ ...settings, recipient_email: e.target.value })}
-                        placeholder="destinatario@gmail.com"
-                        className="w-full px-3.5 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm text-white focus:outline-none focus:border-rose-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium text-slate-300 mb-1">WhatsApp (con código país)</label>
-                      <input
-                        type="text"
-                        value={settings.recipient_whatsapp || ''}
-                        onChange={(e) => setSettings({ ...settings, recipient_whatsapp: e.target.value })}
-                        placeholder="Ej: +573001234567"
-                        className="w-full px-3.5 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm text-white focus:outline-none focus:border-rose-500"
-                      />
-                    </div>
-                  </div>
-
                   <div>
-                    <label className="block text-xs font-medium text-slate-300 mb-1">Canal Principal de Envío</label>
-                    <select
-                      value={settings.primary_channel || 'GMAIL'}
-                      onChange={(e) => setSettings({ ...settings, primary_channel: e.target.value })}
-                      className="w-full px-3.5 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm text-white focus:outline-none focus:border-rose-500"
-                    >
-                      <option value="GMAIL">Gmail (Recomendado — Diseño carta romántica)</option>
-                      <option value="WHATSAPP">WhatsApp Business Cloud API</option>
-                      <option value="BOTH">Ambos Canales</option>
-                    </select>
+                    <label className="block text-xs font-medium text-slate-300 mb-1">Número de WhatsApp (con código de país)</label>
+                    <input
+                      type="text"
+                      value={settings.recipient_whatsapp || ''}
+                      onChange={(e) => setSettings({ ...settings, recipient_whatsapp: e.target.value })}
+                      placeholder="Ejemplo: +573001234567 o 573001234567"
+                      className="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-lg text-sm text-white focus:outline-none focus:border-rose-500"
+                      required
+                    />
+                    <p className="text-[11px] text-slate-400 mt-1">
+                      Este número recibirá los recordatorios diarios de las cartas de amor.
+                    </p>
                   </div>
 
                   <div>
@@ -494,54 +473,58 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 </div>
               )}
 
-              {/* TAB 4: INTEGRACIONES */}
-              {activeTab === 'INTEGRACIONES' && integrationsStatus && (
+              {/* TAB 4: WHATSAPP */}
+              {activeTab === 'INTEGRACIONES' && (
                 <div className="space-y-5 max-w-xl">
-                  {/* Gmail Card */}
-                  <div className="p-4 rounded-xl bg-slate-800/50 border border-slate-700/50 space-y-2.5">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Mail className="w-4 h-4 text-rose-400" />
-                        <span className="text-sm font-semibold text-white">Gmail API / SMTP</span>
-                      </div>
-                      <span className={`px-2 py-0.5 rounded text-[11px] font-semibold ${
-                        integrationsStatus.gmail.connected
-                          ? 'bg-emerald-950 text-emerald-300 border border-emerald-800'
-                          : 'bg-slate-800 text-slate-400'
-                      }`}>
-                        {integrationsStatus.gmail.connected ? 'CONECTADO' : 'PENDIENTE CONFIG'}
-                      </span>
+                  {/* WhatsApp Direct 1-Click Card */}
+                  <div className="p-4 rounded-xl bg-emerald-950/30 border border-emerald-800/40 space-y-3">
+                    <div className="flex items-center gap-2">
+                      <MessageSquare className="w-5 h-5 text-emerald-400" />
+                      <span className="text-sm font-semibold text-white">WhatsApp Directo (Sin Configuración)</span>
                     </div>
-                    <p className="text-xs text-slate-400">{integrationsStatus.gmail.message}</p>
-                    <button
-                      onClick={() => handleSendTestMessage('GMAIL')}
-                      className="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-xs font-medium"
+                    <p className="text-xs text-slate-300 leading-relaxed">
+                      ¡La forma más rápida y sin complicaciones! Puedes enviar el recordatorio romántico de la carta directamente al WhatsApp de tu persona especial con un solo clic.
+                    </p>
+                    <a
+                      href={`https://api.whatsapp.com/send?${
+                        settings.recipient_whatsapp ? `phone=${settings.recipient_whatsapp.replace(/[^0-9]/g, '')}&` : ''
+                      }text=${encodeURIComponent(
+                        `🌸 *MI VIDA ETERNA* 🌸\n\nQuerida ${settings.recipient_name || 'Mi Amor'},\n\n🌹 *Una nueva flor ha florecido hoy para ti en nuestro jardín eterno.*\n\n✨ Entra a nuestro mundo para verla florecer:\n👉 http://localhost:3001\n\nCon todo mi corazón,\n*${settings.signature_name || 'Por siempre tuyo'}* ❤️`
+                      )}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-semibold shadow-md shadow-emerald-900/30 transition-transform active:scale-95"
                     >
-                      Enviar Correo de Prueba
-                    </button>
+                      <MessageSquare className="w-4 h-4 fill-current" />
+                      <span>Abrir WhatsApp con Mensaje de Recordatorio</span>
+                    </a>
                   </div>
 
-                  {/* WhatsApp Card */}
+                  {/* WhatsApp Automated API Card */}
                   <div className="p-4 rounded-xl bg-slate-800/50 border border-slate-700/50 space-y-2.5">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <MessageSquare className="w-4 h-4 text-emerald-400" />
-                        <span className="text-sm font-semibold text-white">Meta WhatsApp Cloud API</span>
+                        <span className="text-sm font-semibold text-white">Meta WhatsApp Cloud API (Automático a las 5 AM)</span>
                       </div>
                       <span className={`px-2 py-0.5 rounded text-[11px] font-semibold ${
-                        integrationsStatus.whatsapp.connected
+                        integrationsStatus?.whatsapp?.connected
                           ? 'bg-emerald-950 text-emerald-300 border border-emerald-800'
                           : 'bg-slate-800 text-slate-400'
                       }`}>
-                        {integrationsStatus.whatsapp.connected ? 'CONECTADO' : 'PENDIENTE CREDENCIALES'}
+                        {integrationsStatus?.whatsapp?.connected ? 'CONECTADO' : 'MODO DIRECTO ACTIVO'}
                       </span>
                     </div>
-                    <p className="text-xs text-slate-400">{integrationsStatus.whatsapp.message}</p>
+                    <p className="text-xs text-slate-400">
+                      {integrationsStatus?.whatsapp?.connected
+                        ? 'Envío automático autónomo a las 5:00 a. m. activo mediante Meta Cloud API.'
+                        : 'El sistema está configurado en modo directo de WhatsApp. Si deseas automatización desatendida a las 5:00 a. m., puedes configurar opcionalmente tu token de Meta en .env.'}
+                    </p>
                     <button
                       onClick={() => handleSendTestMessage('WHATSAPP')}
                       className="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-xs font-medium"
                     >
-                      Enviar WhatsApp de Prueba
+                      Probar Envío por WhatsApp
                     </button>
                   </div>
 
@@ -549,9 +532,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   <div className="p-4 rounded-xl bg-slate-800/50 border border-slate-700/50 space-y-2">
                     <div className="flex items-center gap-2">
                       <Sparkles className="w-4 h-4 text-amber-400" />
-                      <span className="text-sm font-semibold text-white">Gemini AI (gemini-3.8-flash)</span>
+                      <span className="text-sm font-semibold text-white">Biblioteca Poética de Cartas</span>
                     </div>
-                    <p className="text-xs text-slate-400">{integrationsStatus.geminiAi.message}</p>
+                    <p className="text-xs text-slate-400">
+                      Más de 100 cartas originales organizadas en 14 categorías románticas sin repetición garantizada.
+                    </p>
                   </div>
                 </div>
               )}

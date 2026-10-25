@@ -32,7 +32,7 @@ export function getDatabase(): Database.Database {
         daily_time, is_active, ai_enabled, signature_name, updated_at
       ) VALUES (
         1, 'MI VIDA ETERNA', 'Mi Amor', 'Cariño', '',
-        '', 'GMAIL', 0, 'America/Bogota',
+        '', 'WHATSAPP', 0, 'America/Bogota',
         '05:00', 1, 0, 'Por siempre tuyo', datetime('now')
       )
     `).run();

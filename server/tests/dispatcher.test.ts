@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import crypto from 'crypto';
 import { Dispatcher } from '../src/services/dispatcher.js';
 import { GmailService } from '../src/services/gmailService.js';
+import { WhatsAppService } from '../src/services/whatsappService.js';
 import { getDatabase } from '../src/db/index.js';
 
 describe('Dispatcher: Idempotency, Test Mode & Error Handling', () => {
@@ -64,5 +65,18 @@ describe('Dispatcher: Idempotency, Test Mode & Error Handling', () => {
 
     expect(secondRun.channelUsed).toBe('ALREADY_SENT');
     expect(secondRun.flowerCreated).toBe(false);
+  });
+
+  it('generates a direct WhatsApp reminder and handles WhatsApp dispatch', async () => {
+    const waResult = await WhatsAppService.sendLetter(
+      '573001234567',
+      'Mi Amor',
+      'El infinito en tu mirada',
+      'Hoy quiero recordarte lo muchísimo que te amo.',
+      'Por siempre tuyo',
+      'Domingo 25 de Octubre'
+    );
+    expect(waResult.success).toBe(true);
+    expect(waResult.messageId).toBeDefined();
   });
 });

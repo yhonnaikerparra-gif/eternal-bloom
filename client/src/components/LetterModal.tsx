@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Heart, Calendar, Sparkles } from 'lucide-react';
+import { X, Heart, Calendar, Sparkles, MessageSquare } from 'lucide-react';
 import { VisualElement, Letter } from '../services/api.js';
 
 interface LetterModalProps {
@@ -101,6 +101,21 @@ export const LetterModal: React.FC<LetterModalProps> = ({
               {signatureName} 🌹
             </span>
           </div>
+        </div>
+
+        {/* WhatsApp Send Action Button */}
+        <div className="mt-6 pt-4 border-t border-rose-200/40 flex justify-center">
+          <a
+            href={`https://api.whatsapp.com/send?text=${encodeURIComponent(
+              `🌸 *MI VIDA ETERNA* 🌸\n_${formattedDate}_\n\n*${letter.title || 'Carta de Amor'}*\n\n"${letter.content}"\n\n🌹 *Una nueva flor ha florecido hoy para ti en nuestro jardín eterno.*\n\nCon todo mi amor,\n*${signatureName}* ❤️`
+            )}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold tracking-wide shadow-md shadow-emerald-600/20 transition-all active:scale-95"
+          >
+            <MessageSquare className="w-4 h-4 fill-current" />
+            <span>Enviar esta Carta por WhatsApp</span>
+          </a>
         </div>
 
       </div>

@@ -155,35 +155,15 @@ export class Dispatcher {
         };
       }
 
-      // 4. Determine dispatch channel
-      const channel = options.overrideChannel || settings.primary_channel || 'GMAIL';
+      // 4. Determine dispatch channel (Defaulting to WhatsApp)
+      const channel = options.overrideChannel || settings.primary_channel || 'WHATSAPP';
       let sendSuccess = false;
       let providerMessageId: string | undefined;
       let providerResponseStr: string | undefined;
       let deliveryError: string | undefined;
 
-      // 5. Execute transmission
-      if (channel === 'GMAIL' || channel === 'BOTH') {
-        const gmailResult = await GmailService.sendLetter(
-          settings.recipient_email,
-          settings.recipient_name,
-          letter.title,
-          letter.content,
-          settings.signature_name,
-          friendlyDate
-        );
-
-        if (gmailResult.success) {
-          sendSuccess = true;
-          providerMessageId = gmailResult.messageId;
-          providerResponseStr = gmailResult.providerResponse;
-        } else {
-          deliveryError = `Gmail Error: ${gmailResult.error}`;
-        }
-      }
-
-      // Try WhatsApp if primary or fallback
-      if ((channel === 'WHATSAPP' || (!sendSuccess && settings.fallback_channel_enabled && channel === 'GMAIL')) && !sendSuccess) {
+      // 5. Execute transmission via WhatsApp (Primary)
+      if (channel === 'WHATSAPP' || channel === 'BOTH') {
         const waResult = await WhatsAppService.sendLetter(
           settings.recipient_whatsapp,
           settings.recipient_name,
@@ -197,9 +177,29 @@ export class Dispatcher {
           sendSuccess = true;
           providerMessageId = waResult.messageId;
           providerResponseStr = waResult.providerResponse;
+        } else {
+          deliveryError = `WhatsApp Error: ${waResult.error}`;
+        }
+      }
+
+      // Gmail fallback only if explicitly chosen
+      if ((channel === 'GMAIL' || (!sendSuccess && channel === 'BOTH')) && !sendSuccess) {
+        const gmailResult = await GmailService.sendLetter(
+          settings.recipient_email,
+          settings.recipient_name,
+          letter.title,
+          letter.content,
+          settings.signature_name,
+          friendlyDate
+        );
+
+        if (gmailResult.success) {
+          sendSuccess = true;
+          providerMessageId = gmailResult.messageId;
+          providerResponseStr = gmailResult.providerResponse;
           deliveryError = undefined;
         } else {
-          deliveryError = (deliveryError ? `${deliveryError} | ` : '') + `WhatsApp Error: ${waResult.error}`;
+          deliveryError = (deliveryError ? `${deliveryError} | ` : '') + `Gmail Error: ${gmailResult.error}`;
         }
       }
 
