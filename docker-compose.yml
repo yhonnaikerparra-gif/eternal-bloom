@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  eternal-bloom:
+    build: .
+    container_name: eternal_bloom_app
+    restart: always
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - TIMEZONE=America/Bogota
+      - CRON_SCHEDULE=0 5 * * *
+    volumes:
+      - ./server/data:/app/server/data
+      - ./.env:/app/.env
