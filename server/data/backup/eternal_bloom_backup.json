@@ -1,10 +1,10 @@
 {
   "version": "1.0",
-  "exportedAt": "2026-10-26T18:35:35.515Z",
+  "exportedAt": "2026-10-26T18:39:20.501Z",
   "metadata": {
-    "totalLetters": 39,
-    "totalFlowers": 21,
-    "totalLogs": 26
+    "totalLetters": 41,
+    "totalFlowers": 22,
+    "totalLogs": 27
   },
   "tables": {
     "settings": [
@@ -22,7 +22,7 @@
         "is_active": 1,
         "ai_enabled": 0,
         "signature_name": "Por siempre tuyo",
-        "updated_at": "2026-10-26 18:35:35",
+        "updated_at": "2026-10-26 18:39:20",
         "recipient_access_code": "amor2026",
         "public_web_url": "https://mi-vida-eterna.onrender.com"
       }
@@ -531,6 +531,32 @@
         "source": "LIBRARY",
         "created_at": "2026-10-26 18:35:34",
         "scheduled_for": "2026-10-26",
+        "status": "SENT",
+        "attempt_count": 0,
+        "last_error": null
+      },
+      {
+        "id": "15b8f8ea-0e03-4de7-91c8-ef012c30d9a0",
+        "category": "Amor profundo",
+        "title": "Prueba 1",
+        "content": "Eres la persona más maravillosa del universo 26af50b6.",
+        "normalized_hash": "23c12c4d81a1be1f576422397c9763fcd024c5a6f19298c60bbfd5c3cf3344a7",
+        "source": "MANUAL",
+        "created_at": "2026-10-26 18:39:19",
+        "scheduled_for": "2026-10-26",
+        "status": "SENT",
+        "attempt_count": 0,
+        "last_error": null
+      },
+      {
+        "id": "19e85380-e892-431e-89e2-539a611ad4d8",
+        "category": "Recuerdos y momentos especiales",
+        "title": "Aquella risa interminable",
+        "content": "Hoy recordé aquella tarde en la que reímos hasta que nos dolió el estómago por una tontería. Esos instantes sin pretensiones, donde solo somos nosotros dos siendo libres y felices, son los tesoros más valiosos que atesoro en mi memoria.",
+        "normalized_hash": "d1869adca5f275a05580d24cfefd3ed825277f27d8e22b81fb81adfb34cc2a3f",
+        "source": "LIBRARY",
+        "created_at": "2026-10-26 18:39:19",
+        "scheduled_for": "2026-10-26",
         "status": "SCHEDULED",
         "attempt_count": 0,
         "last_error": null
@@ -838,14 +864,26 @@
         "is_test": 1
       },
       {
-        "id": "1157efdb-53aa-443f-849c-47bc1b92fe2a",
+        "id": "05c2accc-8ef9-4881-a9b6-7f0b4568f77b",
+        "date_key": "2026-10-26",
+        "letter_id": "185fb106-5578-4600-a2c2-ebf8fd7dda3d",
+        "channel_used": "GMAIL",
+        "provider_message_id": "mock-test-msg-123",
+        "delivery_status": "SENT",
+        "provider_response": "OK Mock",
+        "sent_at": "2026-10-26 18:39:20",
+        "error_message": null,
+        "is_test": 1
+      },
+      {
+        "id": "d6ce0e70-f356-42a8-9436-eb36fb39b241",
         "date_key": "2099-12-31",
-        "letter_id": "89e0b8c6-4468-466b-be6a-4b19132eeb35",
+        "letter_id": "15b8f8ea-0e03-4de7-91c8-ef012c30d9a0",
         "channel_used": "GMAIL",
         "provider_message_id": "mock-first-run-id",
         "delivery_status": "SENT",
         "provider_response": "OK Mock",
-        "sent_at": "2026-10-26 18:35:35",
+        "sent_at": "2026-10-26 18:39:20",
         "error_message": null,
         "is_test": 0
       }
@@ -1144,6 +1182,20 @@
         "color": "#60A5FA",
         "birth_order": 381,
         "created_at": "2026-10-26 18:35:35"
+      },
+      {
+        "id": "e1c1c005-dbcd-4861-aea0-aa55f06cf631",
+        "letter_id": "15b8f8ea-0e03-4de7-91c8-ef012c30d9a0",
+        "element_type": "STAR",
+        "variety": "GOLDEN_STELLA",
+        "pos_x": -31.62040755689932,
+        "pos_y": 46.199999999999996,
+        "pos_z": -1.307603126175764,
+        "rot_y": 0,
+        "scale": 1.7000000000000002,
+        "color": "#FDE047",
+        "birth_order": 382,
+        "created_at": "2026-10-26 18:39:20"
       }
     ],
     "admin_users": [

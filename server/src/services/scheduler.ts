@@ -38,6 +38,33 @@ export class Scheduler {
 
     // Boot check: If server was restarted after 5:00 AM Bogota and today's letter wasn't sent, trigger recovery
     this.checkAndRecoverPendingDispatch();
+
+    // Keep-alive heartbeat: Pings public health endpoint every 10 minutes to prevent Render free instance sleep
+    this.initKeepAlive();
+  }
+
+  /**
+   * Periodically pings the public web health endpoint to keep cloud container awake 24/7.
+   */
+  private static initKeepAlive(): void {
+    if (process.env.NODE_ENV === 'test') return;
+
+    const rawUrl = process.env.RENDER_EXTERNAL_URL || process.env.PUBLIC_URL || 'https://amor-de-mi-vida-llxh.onrender.com';
+    if (!rawUrl) return;
+
+    const healthUrl = `${rawUrl.replace(/\/+$/, '')}/api/health`;
+    console.log(`[Scheduler] Keep-alive heartbeat configured for ${healthUrl} (interval: 10m)`);
+
+    setInterval(async () => {
+      try {
+        const res = await fetch(healthUrl);
+        if (res.ok) {
+          console.log(`[Scheduler] Keep-alive ping OK (${new Date().toISOString()})`);
+        }
+      } catch (err: any) {
+        console.warn(`[Scheduler] Keep-alive ping warning: ${err.message}`);
+      }
+    }, 10 * 60 * 1000); // Every 10 minutes
   }
 
   /**
