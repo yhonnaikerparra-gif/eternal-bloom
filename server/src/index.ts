@@ -5,6 +5,7 @@ import { fileURLToPath } from 'url';
 import { config } from './config/index.js';
 import { getDatabase, closeDatabase } from './db/index.js';
 import { Scheduler } from './services/scheduler.js';
+import { WhatsAppWebClient } from './services/whatsappWebClient.js';
 import { authRouter } from './routes/authRoutes.js';
 import { lettersRouter } from './routes/lettersRoutes.js';
 import { gardenRouter } from './routes/gardenRoutes.js';
@@ -55,6 +56,7 @@ getDatabase();
 let server: any;
 if (process.env.NODE_ENV !== 'test') {
   Scheduler.init();
+  WhatsAppWebClient.init().catch((err) => console.error('[WhatsAppWeb] Init error:', err));
   server = app.listen(config.port, () => {
     console.log(`🌸 MI VIDA ETERNA server running on port ${config.port}`);
     console.log(`⏰ Scheduler configured for 05:00 AM (${config.timezone})`);

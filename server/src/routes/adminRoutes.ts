@@ -5,6 +5,7 @@ import { Scheduler } from '../services/scheduler.js';
 import { Dispatcher } from '../services/dispatcher.js';
 import { GmailService } from '../services/gmailService.js';
 import { WhatsAppService } from '../services/whatsappService.js';
+import { WhatsAppWebClient } from '../services/whatsappWebClient.js';
 import { config } from '../config/index.js';
 
 export const adminRouter = Router();
@@ -143,4 +144,47 @@ adminRouter.get('/logs', (req: Request, res: Response): void => {
   `).all();
 
   res.json(logs);
+});
+
+// WhatsApp Web Personal QR Link Endpoints
+adminRouter.get('/whatsapp-web/status', (req: Request, res: Response): void => {
+  const status = WhatsAppWebClient.getStatus();
+  res.json(status);
+});
+
+adminRouter.post('/whatsapp-web/start', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const status = await WhatsAppWebClient.startClient();
+    res.json(status);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+adminRouter.post('/whatsapp-web/logout', async (req: Request, res: Response): Promise<void> => {
+  try {
+    await WhatsAppWebClient.logout();
+    res.json({ message: 'WhatsApp desvinculado correctamente', status: WhatsAppWebClient.getStatus() });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+adminRouter.post('/whatsapp-web/test', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const db = getDatabase();
+    const settings = db.prepare('SELECT * FROM settings WHERE id = 1').get() as any;
+
+    if (!settings || !settings.recipient_whatsapp) {
+      res.status(400).json({ error: 'Configura primero el número de WhatsApp del destinatario.' });
+      return;
+    }
+
+    const testMessage = `🌸 *MI VIDA ETERNA* 🌸\n\nHola ${settings.recipient_name || 'mi amor'} ❤️,\n\nEste es un mensaje de prueba desde mi propio WhatsApp. El jardín eterno ha quedado vinculado con éxito y a partir de ahora recibirás aquí tus cartas de amor cada mañana a las 5:00 AM.\n\n✨ Te amo con toda mi alma. 🌹`;
+
+    const result = await WhatsAppWebClient.sendMessage(settings.recipient_whatsapp, testMessage);
+    res.json(result);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
 });

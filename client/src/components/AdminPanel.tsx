@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import {
   X, Lock, Settings, Calendar, Heart, Mail, MessageSquare, Sparkles,
-  Send, RefreshCw, CheckCircle2, AlertTriangle, Play, Eye, ShieldCheck, LogOut
+  Send, RefreshCw, CheckCircle2, AlertTriangle, Play, Eye, ShieldCheck, LogOut,
+  QrCode, Smartphone
 } from 'lucide-react';
-import { api, GardenState } from '../services/api.js';
+import { api, GardenState, WhatsAppWebStatusResponse } from '../services/api.js';
 
 interface AdminPanelProps {
   isOpen: boolean;
@@ -41,25 +42,53 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   // Confirmation dialogs
   const [confirmManualDispatch, setConfirmManualDispatch] = useState(false);
 
+  // WhatsApp Web State
+  const [waWebInfo, setWaWebInfo] = useState<WhatsAppWebStatusResponse | null>(null);
+  const [isStartingWaWeb, setIsStartingWaWeb] = useState(false);
+  const [isTestingWaWeb, setIsTestingWaWeb] = useState(false);
+
   useEffect(() => {
     if (isOpen && isAuthenticated) {
       loadData();
     }
   }, [isOpen, isAuthenticated]);
 
+  // Polling for QR scan & WhatsApp Web connection status
+  useEffect(() => {
+    let interval: any = null;
+    if (isOpen && isAuthenticated && (waWebInfo?.status === 'QR_READY' || waWebInfo?.status === 'CONNECTING')) {
+      interval = setInterval(async () => {
+        try {
+          const status = await api.getWhatsAppWebStatus();
+          setWaWebInfo(status);
+          if (status.status === 'CONNECTED') {
+            setNotification({ type: 'success', message: '¡WhatsApp Personal conectado exitosamente!' });
+          }
+        } catch {
+          // Ignore polling errors
+        }
+      }, 2500);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isOpen, isAuthenticated, waWebInfo?.status]);
+
   const loadData = async () => {
     setIsLoading(true);
     try {
-      const [sett, sched, integ, logList] = await Promise.all([
+      const [sett, sched, integ, logList, waWeb] = await Promise.all([
         api.getSettings(),
         api.getScheduler(),
         api.getIntegrationsStatus(),
         api.getLogs(),
+        api.getWhatsAppWebStatus().catch(() => null)
       ]);
       setSettings(sett);
       setSchedulerInfo(sched);
       setIntegrationsStatus(integ);
       setLogs(logList);
+      if (waWeb) setWaWebInfo(waWeb);
     } catch (err: any) {
       if (err.message.includes('401') || err.message.includes('Token')) {
         setIsAuthenticated(false);
@@ -138,6 +167,41 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       setNotification({ type: 'error', message: err.message });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleStartWaWeb = async () => {
+    setIsStartingWaWeb(true);
+    try {
+      const status = await api.startWhatsAppWeb();
+      setWaWebInfo(status);
+      setNotification({ type: 'success', message: 'Iniciando WhatsApp... Escanea el código QR que aparecerá abajo.' });
+    } catch (err: any) {
+      setNotification({ type: 'error', message: err.message || 'Error al iniciar vinculación' });
+    } finally {
+      setIsStartingWaWeb(false);
+    }
+  };
+
+  const handleLogoutWaWeb = async () => {
+    try {
+      await api.logoutWhatsAppWeb();
+      setWaWebInfo({ status: 'DISCONNECTED', hasSavedSession: false });
+      setNotification({ type: 'success', message: 'WhatsApp personal desvinculado correctamente.' });
+    } catch (err: any) {
+      setNotification({ type: 'error', message: err.message || 'Error al desvincular WhatsApp' });
+    }
+  };
+
+  const handleTestWaWeb = async () => {
+    setIsTestingWaWeb(true);
+    try {
+      await api.testWhatsAppWeb();
+      setNotification({ type: 'success', message: '¡Mensaje de amor de prueba enviado exitosamente por WhatsApp a tu pareja!' });
+    } catch (err: any) {
+      setNotification({ type: 'error', message: err.message || 'Error al enviar mensaje de prueba por WhatsApp' });
+    } finally {
+      setIsTestingWaWeb(false);
     }
   };
 
@@ -518,14 +582,126 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               {/* TAB 4: WHATSAPP */}
               {activeTab === 'INTEGRACIONES' && (
                 <div className="space-y-5 max-w-xl">
-                  {/* WhatsApp Direct 1-Click Card */}
-                  <div className="p-4 rounded-xl bg-emerald-950/30 border border-emerald-800/40 space-y-3">
-                    <div className="flex items-center gap-2">
-                      <MessageSquare className="w-5 h-5 text-emerald-400" />
-                      <span className="text-sm font-semibold text-white">WhatsApp Directo (Sin Configuración)</span>
+                  {/* WhatsApp Web Personal QR Linking (100% Autonomous) */}
+                  <div className="p-5 rounded-2xl bg-gradient-to-br from-slate-900 via-slate-900 to-emerald-950/40 border border-emerald-500/30 space-y-4 shadow-xl">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2.5">
+                        <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                          <Smartphone className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-semibold text-white">Vincular tu WhatsApp Personal (Código QR)</h4>
+                          <p className="text-[11px] text-emerald-300 font-medium">Envío 100% automático desatendido a las 5:00 AM</p>
+                        </div>
+                      </div>
+                      <span className={`px-2.5 py-1 rounded-full text-[11px] font-semibold border ${
+                        waWebInfo?.status === 'CONNECTED'
+                          ? 'bg-emerald-950/80 text-emerald-300 border-emerald-600/60'
+                          : waWebInfo?.status === 'QR_READY'
+                          ? 'bg-amber-950/80 text-amber-300 border-amber-600/60 animate-pulse'
+                          : waWebInfo?.status === 'CONNECTING'
+                          ? 'bg-cyan-950/80 text-cyan-300 border-cyan-600/60 animate-pulse'
+                          : 'bg-slate-800 text-slate-400 border-slate-700'
+                      }`}>
+                        {waWebInfo?.status === 'CONNECTED' ? '🟢 VINCULADO' : waWebInfo?.status === 'QR_READY' ? '🟡 ESCANEAR QR' : waWebInfo?.status === 'CONNECTING' ? '🔵 CONECTANDO...' : '⚪ NO VINCULADO'}
+                      </span>
                     </div>
-                    <p className="text-xs text-slate-300 leading-relaxed">
-                      ¡La forma más rápida y sin complicaciones! Puedes enviar el recordatorio romántico de la carta directamente al WhatsApp de tu persona especial con un solo clic.
+
+                    {waWebInfo?.status === 'CONNECTED' ? (
+                      <div className="p-4 rounded-xl bg-emerald-950/40 border border-emerald-800/60 space-y-3">
+                        <div className="flex items-start gap-3">
+                          <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
+                          <div className="text-xs text-slate-200 leading-relaxed">
+                            <p className="font-semibold text-emerald-300 mb-0.5">
+                              ¡Tu WhatsApp personal está vinculado como emisor autónomo!
+                            </p>
+                            <p>
+                              Número emisor conectado: <span className="font-mono font-bold text-white">+{waWebInfo.user?.phone || 'Vinculado'}</span>
+                            </p>
+                            <p className="text-slate-400 mt-1">
+                              Todos los días a las 5:00 AM, el servidor le enviará la carta de amor a tu pareja directamente desde tu propio WhatsApp sin que tengas que tocar el teléfono.
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-2.5 pt-2 border-t border-emerald-800/40">
+                          <button
+                            type="button"
+                            onClick={handleTestWaWeb}
+                            disabled={isTestingWaWeb}
+                            className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-sm"
+                          >
+                            {isTestingWaWeb ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                            <span>Enviar Mensaje de Prueba a mi Pareja Ahora</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleLogoutWaWeb}
+                            className="px-3 py-2 bg-slate-800 hover:bg-rose-950/80 hover:text-rose-300 text-slate-300 rounded-lg text-xs font-medium transition-colors"
+                          >
+                            Desvincular Dispositivo
+                          </button>
+                        </div>
+                      </div>
+                    ) : waWebInfo?.status === 'QR_READY' && waWebInfo.qrCode ? (
+                      <div className="p-4 rounded-xl bg-slate-900 border border-amber-500/40 space-y-4 text-center">
+                        <div className="flex items-center justify-center gap-2 text-xs font-semibold text-amber-300">
+                          <QrCode className="w-4 h-4" />
+                          <span>Escanea este código QR con WhatsApp en tu celular:</span>
+                        </div>
+
+                        <div className="inline-block p-3 bg-white rounded-2xl shadow-2xl">
+                          <img
+                            src={waWebInfo.qrCode}
+                            alt="Código QR de WhatsApp"
+                            className="w-56 h-56 sm:w-64 sm:h-64 object-contain mx-auto"
+                          />
+                        </div>
+
+                        <div className="text-left text-xs text-slate-300 bg-slate-800/70 p-3.5 rounded-xl space-y-1.5 max-w-sm mx-auto border border-slate-700/50">
+                          <p className="font-semibold text-white">Instrucciones en tu celular:</p>
+                          <p>1. Abre la app de <b>WhatsApp</b> en tu celular.</p>
+                          <p>2. Ve a <b>Ajustes</b> (o menú de 3 puntos) &gt; <b>Dispositivos vinculados</b>.</p>
+                          <p>3. Toca <b>Vincular un dispositivo</b> y apunta la cámara a este código.</p>
+                        </div>
+
+                        <div className="flex items-center justify-center gap-2 text-xs text-slate-400">
+                          <RefreshCw className="w-3.5 h-3.5 animate-spin text-amber-400" />
+                          <span>Esperando que escanees el código QR...</span>
+                        </div>
+                      </div>
+                    ) : waWebInfo?.status === 'CONNECTING' ? (
+                      <div className="p-6 rounded-xl bg-slate-900/60 border border-slate-700/60 text-center space-y-3">
+                        <RefreshCw className="w-6 h-6 text-cyan-400 animate-spin mx-auto" />
+                        <p className="text-xs font-medium text-white">Conectando sesión de WhatsApp...</p>
+                        <p className="text-[11px] text-slate-400">Sincronizando de forma segura...</p>
+                      </div>
+                    ) : (
+                      <div className="p-4 rounded-xl bg-slate-800/40 border border-slate-700/50 space-y-3">
+                        <p className="text-xs text-slate-300 leading-relaxed">
+                          Para que las cartas se envíen solas sin que tú estés despierto ni toques nada, vincula tu WhatsApp escaneando un código QR una sola vez (igual que en WhatsApp Web de tu PC).
+                        </p>
+                        <button
+                          type="button"
+                          onClick={handleStartWaWeb}
+                          disabled={isStartingWaWeb}
+                          className="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-semibold shadow-md shadow-emerald-900/30 transition-transform active:scale-95"
+                        >
+                          {isStartingWaWeb ? <RefreshCw className="w-4 h-4 animate-spin" /> : <QrCode className="w-4 h-4" />}
+                          <span>Generar Código QR para Vincular mi WhatsApp</span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* WhatsApp Direct 1-Click Card (Fallback) */}
+                  <div className="p-4 rounded-xl bg-slate-800/40 border border-slate-700/50 space-y-3">
+                    <div className="flex items-center gap-2">
+                      <MessageSquare className="w-4 h-4 text-emerald-400" />
+                      <span className="text-sm font-semibold text-white">Opción Manual: Enlace Directo (1 Clic)</span>
+                    </div>
+                    <p className="text-xs text-slate-400 leading-relaxed">
+                      Si en algún momento prefieres enviar el recordatorio manualmente desde cualquier teléfono o navegador, puedes usar este botón de un solo clic.
                     </p>
                     <a
                       href={`https://api.whatsapp.com/send?${
@@ -535,10 +711,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                       )}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-semibold shadow-md shadow-emerald-900/30 transition-transform active:scale-95"
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-xs font-semibold shadow-md transition-transform active:scale-95"
                     >
                       <MessageSquare className="w-4 h-4 fill-current" />
-                      <span>Abrir WhatsApp con Mensaje de Recordatorio</span>
+                      <span>Abrir WhatsApp Web / Móvil Directo</span>
                     </a>
                   </div>
 

@@ -62,6 +62,18 @@ export interface RecipientStatus {
   isActive: boolean;
 }
 
+export interface WhatsAppWebStatusResponse {
+  status: 'DISCONNECTED' | 'QR_READY' | 'CONNECTING' | 'CONNECTED';
+  qrCode?: string | null;
+  user?: {
+    id?: string;
+    name?: string;
+    phone?: string;
+  } | null;
+  hasSavedSession: boolean;
+  lastConnectedAt?: string;
+}
+
 function getAuthHeader(): Record<string, string> {
   const token = localStorage.getItem('eternal_bloom_token');
   return token ? { Authorization: `Bearer ${token}` } : {};
@@ -253,5 +265,42 @@ export const api = {
       body: JSON.stringify(data),
     });
     return res.json();
+  },
+
+  // WhatsApp Web QR Link
+  async getWhatsAppWebStatus(): Promise<WhatsAppWebStatusResponse> {
+    const res = await fetch(`${API_BASE}/admin/whatsapp-web/status`, {
+      headers: { ...getAuthHeader() },
+    });
+    if (!res.ok) throw new Error('Error al obtener estado de WhatsApp Web');
+    return res.json();
+  },
+
+  async startWhatsAppWeb(): Promise<WhatsAppWebStatusResponse> {
+    const res = await fetch(`${API_BASE}/admin/whatsapp-web/start`, {
+      method: 'POST',
+      headers: { ...getAuthHeader() },
+    });
+    if (!res.ok) throw new Error('Error al iniciar vinculación de WhatsApp');
+    return res.json();
+  },
+
+  async logoutWhatsAppWeb(): Promise<any> {
+    const res = await fetch(`${API_BASE}/admin/whatsapp-web/logout`, {
+      method: 'POST',
+      headers: { ...getAuthHeader() },
+    });
+    if (!res.ok) throw new Error('Error al desvincular WhatsApp');
+    return res.json();
+  },
+
+  async testWhatsAppWeb(): Promise<any> {
+    const res = await fetch(`${API_BASE}/admin/whatsapp-web/test`, {
+      method: 'POST',
+      headers: { ...getAuthHeader() },
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) throw new Error(data.error || 'Error al enviar mensaje de prueba');
+    return data;
   }
 };
