@@ -294,10 +294,11 @@ export const api = {
     return res.json();
   },
 
-  async testWhatsAppWeb(): Promise<any> {
+  async testWhatsAppWeb(recipient_whatsapp?: string): Promise<any> {
     const res = await fetch(`${API_BASE}/admin/whatsapp-web/test`, {
       method: 'POST',
-      headers: { ...getAuthHeader() },
+      headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+      body: JSON.stringify({ recipient_whatsapp }),
     });
     const data = await res.json();
     if (!res.ok || !data.success) throw new Error(data.error || 'Error al enviar mensaje de prueba');

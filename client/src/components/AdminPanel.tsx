@@ -209,8 +209,16 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const handleTestWaWeb = async () => {
     setIsTestingWaWeb(true);
     try {
-      await api.testWhatsAppWeb();
-      setNotification({ type: 'success', message: '¡Mensaje de amor de prueba enviado exitosamente por WhatsApp a tu pareja!' });
+      // Auto-save settings first so the recipient number is guaranteed in the database
+      if (settings) {
+        await api.updateSettings(settings);
+      }
+      const res = await api.testWhatsAppWeb(settings?.recipient_whatsapp);
+      setNotification({
+        type: 'success',
+        message: res.message || '¡Mensaje de prueba enviado exitosamente por WhatsApp al celular de tu pareja!'
+      });
+      loadData();
     } catch (err: any) {
       setNotification({ type: 'error', message: err.message || 'Error al enviar mensaje de prueba por WhatsApp' });
     } finally {
@@ -731,6 +739,35 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                               Todos los días a las 5:00 AM, el servidor le enviará la carta de amor a tu pareja directamente desde tu propio WhatsApp sin que tengas que tocar el teléfono.
                             </p>
                           </div>
+                        </div>
+
+                        {/* Recipient Destination Phone in WhatsApp tab */}
+                        <div className="p-3 bg-slate-900/80 rounded-xl border border-slate-700/60 space-y-2">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-slate-300 font-medium">WhatsApp de tu Pareja (Destinatario):</span>
+                            <span className="text-emerald-400 font-mono text-[11px] font-semibold">
+                              {settings.recipient_whatsapp ? `+${settings.recipient_whatsapp.replace(/[^\d]/g, '')}` : 'Sin configurar'}
+                            </span>
+                          </div>
+                          <div className="flex gap-2">
+                            <input
+                              type="text"
+                              value={settings.recipient_whatsapp || ''}
+                              onChange={(e) => setSettings({ ...settings, recipient_whatsapp: e.target.value })}
+                              placeholder="Ej: +57 314 7935338"
+                              className="flex-1 px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-xs text-white font-mono focus:outline-none focus:border-rose-500"
+                            />
+                            <button
+                              type="button"
+                              onClick={handleSaveSettings}
+                              className="px-3.5 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-semibold shrink-0 transition-colors"
+                            >
+                              Guardar
+                            </button>
+                          </div>
+                          <p className="text-[11px] text-slate-400">
+                            A este número llegarán las cartas cada mañana a las 5:00 AM desde tu WhatsApp (+{waWebInfo.user?.phone || 'vinculado'}).
+                          </p>
                         </div>
 
                         <div className="flex flex-wrap items-center gap-2.5 pt-2 border-t border-emerald-800/40">

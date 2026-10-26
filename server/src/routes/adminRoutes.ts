@@ -176,21 +176,39 @@ adminRouter.post('/whatsapp-web/logout', async (req: Request, res: Response): Pr
 adminRouter.post('/whatsapp-web/test', async (req: Request, res: Response): Promise<void> => {
   try {
     const db = getDatabase();
-    const settings = db.prepare('SELECT * FROM settings WHERE id = 1').get() as any;
+    let settings = db.prepare('SELECT * FROM settings WHERE id = 1').get() as any;
 
-    if (!settings || !settings.recipient_whatsapp) {
-      res.status(400).json({ error: 'Configura primero el número de WhatsApp del destinatario.' });
+    let targetPhone = req.body?.recipient_whatsapp || settings?.recipient_whatsapp || '573147935338';
+    targetPhone = String(targetPhone).replace(/[^\d]/g, '');
+
+    if (!targetPhone || targetPhone.length < 7) {
+      res.status(400).json({
+        error: 'Por favor escribe el número de WhatsApp de tu pareja (destinatario), por ejemplo: +57 314 7935338.'
+      });
       return;
     }
 
-    const testMessage = `🌸 *MI VIDA ETERNA* 🌸\n\nHola ${settings.recipient_name || 'mi amor'} ❤️,\n\nEste es un mensaje de prueba desde mi propio WhatsApp. El jardín eterno ha quedado vinculado con éxito y a partir de ahora recibirás aquí tus cartas de amor cada mañana a las 5:00 AM.\n\n✨ Te amo con toda mi alma. 🌹`;
+    // Persist to DB if updated or previously missing
+    if (settings && targetPhone !== settings.recipient_whatsapp?.replace(/[^\d]/g, '')) {
+      db.prepare('UPDATE settings SET recipient_whatsapp = ?, updated_at = datetime("now") WHERE id = 1').run(targetPhone);
+      settings = db.prepare('SELECT * FROM settings WHERE id = 1').get() as any;
+    }
 
-    const result = await WhatsAppWebClient.sendMessage(settings.recipient_whatsapp, testMessage);
+    const publicUrl = settings?.public_web_url || 'https://amor-de-mi-vida-llxh.onrender.com';
+    const testMessage = `🌸 *MI VIDA ETERNA* 🌸\n\nHola ${settings?.recipient_name || 'mi amor'} ❤️,\n\nEste es un mensaje de prueba desde mi propio WhatsApp. Nuestro jardín eterno ha quedado vinculado con éxito y a partir de ahora recibirás aquí tus cartas de amor cada mañana a las 5:00 AM.\n\n✨ Te amo con toda mi alma. 🌹\n👉 ${publicUrl}`;
+
+    const result = await WhatsAppWebClient.sendMessage(targetPhone, testMessage);
     if (!result.success) {
       res.status(400).json({ error: result.error || 'Error enviando mensaje de prueba por WhatsApp.' });
       return;
     }
-    res.json(result);
+
+    res.json({
+      success: true,
+      messageId: result.messageId,
+      recipient: targetPhone,
+      message: `¡Mensaje enviado exitosamente a +${targetPhone}!`
+    });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }

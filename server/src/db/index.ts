@@ -48,7 +48,7 @@ export function getDatabase(): Database.Database {
   BackupService.autoRestoreIfEmpty(db);
 
   // Initialize Default Settings (id = 1)
-  const existingSettings = db.prepare('SELECT id FROM settings WHERE id = 1').get();
+  const existingSettings = db.prepare('SELECT id, recipient_whatsapp FROM settings WHERE id = 1').get() as any;
   if (!existingSettings) {
     db.prepare(`
       INSERT INTO settings (
@@ -57,11 +57,20 @@ export function getDatabase(): Database.Database {
         fallback_channel_enabled, timezone, daily_time, is_active, ai_enabled,
         signature_name, updated_at
       ) VALUES (
-        1, 'MI VIDA ETERNA', 'Mi Amor', 'Cariño', '',
-        '', '', '', 'WHATSAPP',
+        1, 'MI VIDA ETERNA', 'Mi Amor', 'Cariño', '573147935338',
+        '', '200904', 'https://amor-de-mi-vida-llxh.onrender.com', 'WHATSAPP',
         0, 'America/Bogota', '05:00', 1, 0,
         'Por siempre tuyo', datetime('now')
       )
+    `).run();
+  } else if (!existingSettings.recipient_whatsapp || existingSettings.recipient_whatsapp === '573001234567') {
+    db.prepare(`
+      UPDATE settings SET
+        recipient_whatsapp = '573147935338',
+        recipient_access_code = CASE WHEN recipient_access_code = '' THEN '200904' ELSE recipient_access_code END,
+        public_web_url = 'https://amor-de-mi-vida-llxh.onrender.com',
+        updated_at = datetime('now')
+      WHERE id = 1
     `).run();
   }
 
