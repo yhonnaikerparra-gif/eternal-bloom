@@ -4,6 +4,7 @@ import { LetterEngine } from './letterEngine.js';
 import { GardenService } from './gardenService.js';
 import { GmailService } from './gmailService.js';
 import { WhatsAppService } from './whatsappService.js';
+import { BackupService } from '../db/backupService.js';
 
 export interface DispatchResult {
   success: boolean;
@@ -251,6 +252,13 @@ export class Dispatcher {
           const visualElement = GardenService.createVisualElementForLetter(letter.id, birthOrder);
           flowerCreated = true;
           elementId = visualElement.id;
+
+          // Automatically sync snapshot to cloud backup
+          try {
+            await BackupService.createBackup(db);
+          } catch (bErr) {
+            console.warn('[Dispatcher] Auto-backup notice:', bErr);
+          }
         }
       } else {
         // Failed delivery: increment attempts, record error, NEVER create a flower

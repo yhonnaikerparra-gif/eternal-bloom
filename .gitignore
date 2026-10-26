@@ -5,5 +5,6 @@ dist/
 server/data/*.db
 server/data/*.db-shm
 server/data/*.db-wal
+server/data/whatsapp_auth/
 .DS_Store
 Thumbs.db

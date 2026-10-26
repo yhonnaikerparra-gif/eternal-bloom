@@ -302,5 +302,34 @@ export const api = {
     const data = await res.json();
     if (!res.ok || !data.success) throw new Error(data.error || 'Error al enviar mensaje de prueba');
     return data;
+  },
+
+  // Cloud Backup & Restore
+  async getBackupInfo(): Promise<any> {
+    const res = await fetch(`${API_BASE}/admin/backup/info`, {
+      headers: { ...getAuthHeader() },
+    });
+    if (!res.ok) throw new Error('Error al consultar información de respaldo');
+    return res.json();
+  },
+
+  async createBackup(): Promise<any> {
+    const res = await fetch(`${API_BASE}/admin/backup/create`, {
+      method: 'POST',
+      headers: { ...getAuthHeader() },
+    });
+    if (!res.ok) throw new Error('Error al crear copia de seguridad');
+    return res.json();
+  },
+
+  async restoreBackup(backupData: any): Promise<any> {
+    const res = await fetch(`${API_BASE}/admin/backup/restore`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+      body: JSON.stringify({ backupData }),
+    });
+    const result = await res.json();
+    if (!res.ok || !result.success) throw new Error(result.error || 'Error al restaurar copia de seguridad');
+    return result;
   }
 };

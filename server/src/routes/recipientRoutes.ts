@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import { getDatabase } from '../db/index.js';
 import { config } from '../config/index.js';
 import { Dispatcher } from '../services/dispatcher.js';
+import { BackupService } from '../db/backupService.js';
 
 export const recipientRouter = Router();
 
@@ -93,6 +94,11 @@ recipientRouter.post('/access', async (req: Request, res: Response): Promise<voi
         updated_at = datetime('now')
       WHERE id = 1
     `).run(targetName, cleanPhone, inputCode, targetUrl, targetUrl);
+
+    // Save cloud snapshot immediately
+    try {
+      await BackupService.createBackup(db);
+    } catch {}
 
     // Launch the ongoing romantic process: ensure today's letter and flower are generated
     const timezone = settings.timezone || 'America/Bogota';

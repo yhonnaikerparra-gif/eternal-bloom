@@ -4,6 +4,7 @@ import path from 'path';
 import bcrypt from 'bcryptjs';
 import { config } from '../config/index.js';
 import { SCHEMA_SQL } from './schema.js';
+import { BackupService } from './backupService.js';
 
 let dbInstance: Database.Database | null = null;
 
@@ -33,6 +34,9 @@ export function getDatabase(): Database.Database {
   } catch {
     // Column already exists
   }
+
+  // Auto-restore from cloud snapshot if running on a new PC or fresh deployment
+  BackupService.autoRestoreIfEmpty(db);
 
   // Initialize Default Settings (id = 1)
   const existingSettings = db.prepare('SELECT id FROM settings WHERE id = 1').get();

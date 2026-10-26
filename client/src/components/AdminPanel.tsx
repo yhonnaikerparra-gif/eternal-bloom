@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   X, Lock, Settings, Calendar, Heart, Mail, MessageSquare, Sparkles,
   Send, RefreshCw, CheckCircle2, AlertTriangle, Play, Eye, ShieldCheck, LogOut,
-  QrCode, Smartphone
+  QrCode, Smartphone, Download, Cloud, Upload
 } from 'lucide-react';
 import { api, GardenState, WhatsAppWebStatusResponse } from '../services/api.js';
 
@@ -47,6 +47,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const [isStartingWaWeb, setIsStartingWaWeb] = useState(false);
   const [isTestingWaWeb, setIsTestingWaWeb] = useState(false);
 
+  // Backup State
+  const [backupInfo, setBackupInfo] = useState<any>(null);
+  const [isBackingUp, setIsBackingUp] = useState(false);
+
   useEffect(() => {
     if (isOpen && isAuthenticated) {
       loadData();
@@ -77,18 +81,20 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const loadData = async () => {
     setIsLoading(true);
     try {
-      const [sett, sched, integ, logList, waWeb] = await Promise.all([
+      const [sett, sched, integ, logList, waWeb, bInfo] = await Promise.all([
         api.getSettings(),
         api.getScheduler(),
         api.getIntegrationsStatus(),
         api.getLogs(),
-        api.getWhatsAppWebStatus().catch(() => null)
+        api.getWhatsAppWebStatus().catch(() => null),
+        api.getBackupInfo().catch(() => null)
       ]);
       setSettings(sett);
       setSchedulerInfo(sched);
       setIntegrationsStatus(integ);
       setLogs(logList);
       if (waWeb) setWaWebInfo(waWeb);
+      if (bInfo?.backup) setBackupInfo(bInfo.backup);
     } catch (err: any) {
       if (err.message.includes('401') || err.message.includes('Token')) {
         setIsAuthenticated(false);
@@ -203,6 +209,41 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     } finally {
       setIsTestingWaWeb(false);
     }
+  };
+
+  const handleCreateBackup = async () => {
+    setIsBackingUp(true);
+    try {
+      const res = await api.createBackup();
+      setBackupInfo(res.backup);
+      setNotification({ type: 'success', message: '¡Copia de seguridad en la nube generada exitosamente!' });
+    } catch (err: any) {
+      setNotification({ type: 'error', message: err.message || 'Error al generar copia' });
+    } finally {
+      setIsBackingUp(false);
+    }
+  };
+
+  const handleDownloadBackup = () => {
+    window.open('/api/admin/backup/download', '_blank');
+  };
+
+  const handleRestoreFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      try {
+        const json = JSON.parse(event.target?.result as string);
+        await api.restoreBackup(json);
+        setNotification({ type: 'success', message: '¡Proceso y datos restaurados exitosamente desde archivo!' });
+        loadData();
+        onRefreshState();
+      } catch (err: any) {
+        setNotification({ type: 'error', message: 'Archivo de respaldo inválido o dañado.' });
+      }
+    };
+    reader.readAsText(file);
   };
 
   const handleCreateManualLetter = async (e: React.FormEvent) => {
@@ -515,6 +556,67 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                           </button>
                         </div>
                       )}
+                    </div>
+                  </div>
+
+                  {/* Cloud Backup & Migration Card */}
+                  <div className="p-4 rounded-xl bg-slate-800/60 border border-indigo-500/30 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Cloud className="w-5 h-5 text-indigo-400" />
+                        <span className="text-sm font-semibold text-white">Copia de Seguridad en la Nube (GitHub & Local)</span>
+                      </div>
+                      <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-indigo-950 text-indigo-300 border border-indigo-800">
+                        SINCRONIZADO
+                      </span>
+                    </div>
+
+                    <p className="text-xs text-slate-300 leading-relaxed">
+                      El historial completo de cartas, flores del jardín 3D, configuración y clave de tu pareja se guarda en la nube para que nunca pierdas el progreso al cambiar de computadora.
+                    </p>
+
+                    <div className="grid grid-cols-2 gap-2 text-xs bg-slate-900/60 p-3 rounded-lg border border-slate-700/50">
+                      <div>
+                        <span className="text-slate-400 block text-[11px]">Cartas en Respaldo:</span>
+                        <span className="font-mono font-bold text-white">{backupInfo?.letterCount || 0} cartas</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 block text-[11px]">Flores Respaldadas:</span>
+                        <span className="font-mono font-bold text-rose-300">{backupInfo?.flowerCount || 0} flores</span>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2.5 pt-1">
+                      <button
+                        type="button"
+                        onClick={handleCreateBackup}
+                        disabled={isBackingUp}
+                        className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-sm"
+                      >
+                        {isBackingUp ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Cloud className="w-3.5 h-3.5" />}
+                        <span>Crear Copia en la Nube Ahora</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={handleDownloadBackup}
+                        className="px-3.5 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors"
+                        title="Descargar archivo JSON a tu computadora o celular"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                        <span>Descargar Archivo (.json)</span>
+                      </button>
+
+                      <label className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-medium flex items-center gap-1.5 cursor-pointer transition-colors border border-slate-700">
+                        <Upload className="w-3.5 h-3.5" />
+                        <span>Restaurar Archivo</span>
+                        <input
+                          type="file"
+                          accept=".json"
+                          onChange={handleRestoreFile}
+                          className="hidden"
+                        />
+                      </label>
                     </div>
                   </div>
                 </div>

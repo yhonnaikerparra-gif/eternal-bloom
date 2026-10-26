@@ -1,3 +1,5 @@
+import fs from 'fs';
+import path from 'path';
 import { Router, Request, Response } from 'express';
 import { getDatabase } from '../db/index.js';
 import { authMiddleware } from './authRoutes.js';
@@ -6,6 +8,7 @@ import { Dispatcher } from '../services/dispatcher.js';
 import { GmailService } from '../services/gmailService.js';
 import { WhatsAppService } from '../services/whatsappService.js';
 import { WhatsAppWebClient } from '../services/whatsappWebClient.js';
+import { BackupService } from '../db/backupService.js';
 import { config } from '../config/index.js';
 
 export const adminRouter = Router();
@@ -184,6 +187,55 @@ adminRouter.post('/whatsapp-web/test', async (req: Request, res: Response): Prom
 
     const result = await WhatsAppWebClient.sendMessage(settings.recipient_whatsapp, testMessage);
     res.json(result);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Cloud Backup & Restore Endpoints
+adminRouter.get('/backup/info', (req: Request, res: Response): void => {
+  const info = BackupService.getLatestBackupInfo();
+  res.json({ backup: info });
+});
+
+adminRouter.post('/backup/create', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const db = getDatabase();
+    const info = await BackupService.createBackup(db);
+    res.json({ success: true, backup: info, message: 'Copia de seguridad en la nube creada exitosamente.' });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+adminRouter.get('/backup/download', (req: Request, res: Response): void => {
+  try {
+    const backupDir = BackupService.getBackupDir();
+    const jsonPath = path.join(backupDir, 'eternal_bloom_backup.json');
+
+    if (!fs.existsSync(jsonPath)) {
+      // Create backup on the fly if none exists
+      const db = getDatabase();
+      BackupService.createBackup(db);
+    }
+
+    res.download(jsonPath, `mi_vida_eterna_copia_seguridad_${new Date().toISOString().slice(0, 10)}.json`);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+adminRouter.post('/backup/restore', (req: Request, res: Response): void => {
+  try {
+    const { backupData } = req.body;
+    if (!backupData) {
+      res.status(400).json({ error: 'Datos de respaldo no proporcionados.' });
+      return;
+    }
+
+    const db = getDatabase();
+    BackupService.restoreFromJson(db, backupData);
+    res.json({ success: true, message: '¡Datos y proceso restaurados exitosamente!' });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
