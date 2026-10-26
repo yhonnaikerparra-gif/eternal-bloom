@@ -159,14 +159,20 @@ export class WhatsAppService {
       }
     }
 
-    // 2. Secondary: If Meta API credentials are not set, return simulated success with direct link notice
+    // 2. Secondary: If neither WhatsApp Web nor Meta API are configured
     if (!this.isConfigured()) {
+      if (process.env.NODE_ENV === 'test') {
+        return {
+          success: true,
+          messageId: `wa-test-mock-${Date.now()}`,
+          providerResponse: JSON.stringify({ mode: 'TEST_MOCK' })
+        };
+      }
       return {
-        success: true,
-        messageId: `wa-direct-${Date.now()}`,
+        success: false,
+        error: 'Tu WhatsApp personal no está vinculado con el código QR. Entra al Panel de Administrador > pestaña WhatsApp y escanea el código QR para activar el envío automático a su celular.',
         providerResponse: JSON.stringify({
-          mode: 'DIRECT_WHATSAPP_LINK',
-          notice: 'Mensaje preparado para envío directo por WhatsApp sin requerir API de Meta.',
+          mode: 'NOT_LINKED',
           directUrl: this.buildDirectWhatsAppUrl(toPhone, recipientName, title, content, signatureName, dateString, webUrl)
         })
       };

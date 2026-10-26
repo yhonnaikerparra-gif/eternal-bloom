@@ -186,6 +186,10 @@ adminRouter.post('/whatsapp-web/test', async (req: Request, res: Response): Prom
     const testMessage = `🌸 *MI VIDA ETERNA* 🌸\n\nHola ${settings.recipient_name || 'mi amor'} ❤️,\n\nEste es un mensaje de prueba desde mi propio WhatsApp. El jardín eterno ha quedado vinculado con éxito y a partir de ahora recibirás aquí tus cartas de amor cada mañana a las 5:00 AM.\n\n✨ Te amo con toda mi alma. 🌹`;
 
     const result = await WhatsAppWebClient.sendMessage(settings.recipient_whatsapp, testMessage);
+    if (!result.success) {
+      res.status(400).json({ error: result.error || 'Error enviando mensaje de prueba por WhatsApp.' });
+      return;
+    }
     res.json(result);
   } catch (error: any) {
     res.status(500).json({ error: error.message });

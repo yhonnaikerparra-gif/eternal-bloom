@@ -1,10 +1,10 @@
 {
   "version": "1.0",
-  "exportedAt": "2026-10-26T03:37:10.487Z",
+  "exportedAt": "2026-10-26T18:18:25.105Z",
   "metadata": {
-    "totalLetters": 31,
-    "totalFlowers": 16,
-    "totalLogs": 21
+    "totalLetters": 33,
+    "totalFlowers": 18,
+    "totalLogs": 23
   },
   "tables": {
     "settings": [
@@ -22,7 +22,7 @@
         "is_active": 1,
         "ai_enabled": 0,
         "signature_name": "Por siempre tuyo",
-        "updated_at": "2026-10-26 03:37:10",
+        "updated_at": "2026-10-26 18:18:25",
         "recipient_access_code": "amor2026",
         "public_web_url": "https://mi-vida-eterna.onrender.com"
       }
@@ -414,7 +414,7 @@
         "source": "MANUAL",
         "created_at": "2026-10-26 03:37:09",
         "scheduled_for": "2026-10-26",
-        "status": "SCHEDULED",
+        "status": "SENT",
         "attempt_count": 0,
         "last_error": null
       },
@@ -426,6 +426,32 @@
         "normalized_hash": "fbb165ead291c943274bd063fbae981ba05ee01c2ff86163093bbd95e43d5ca0",
         "source": "LIBRARY",
         "created_at": "2026-10-26 03:37:09",
+        "scheduled_for": "2026-10-26",
+        "status": "SENT",
+        "attempt_count": 0,
+        "last_error": null
+      },
+      {
+        "id": "22631fb5-c145-431f-9dcc-c7f4bd3d6709",
+        "category": "Amor profundo",
+        "title": "Prueba 1",
+        "content": "Eres la persona más maravillosa del universo 9cad77a8.",
+        "normalized_hash": "612c89ce197891f9a1aa5ea17b1a5f1a9a88e46c5e4774bbddb415cc7650b26a",
+        "source": "MANUAL",
+        "created_at": "2026-10-26 18:18:24",
+        "scheduled_for": "2026-10-26",
+        "status": "SENT",
+        "attempt_count": 0,
+        "last_error": null
+      },
+      {
+        "id": "97f97167-f2f9-4595-bca5-26227f7fe0eb",
+        "category": "Amor profundo",
+        "title": "La gravedad de nosotros",
+        "content": "Así como los planetas giran en armonía alrededor del sol sin cuestionar su órbita, mi mundo entero encontró su centro el día que entraste en él. Eres la fuerza que equilibra mis dudas y multiplica mis alegrías. Mi amor por ti es eterno y absoluto.",
+        "normalized_hash": "bdd3d1017c83197b87eac9066ea9ef6dc985be80f0378df61a36cf05d1ab51b2",
+        "source": "LIBRARY",
+        "created_at": "2026-10-26 18:18:24",
         "scheduled_for": "2026-10-26",
         "status": "SCHEDULED",
         "attempt_count": 0,
@@ -674,14 +700,38 @@
         "is_test": 1
       },
       {
-        "id": "48347e97-ae1f-4d2b-a30c-896fc3324b87",
+        "id": "0368f3e7-4f4c-43e8-a43a-14b0ab7bbc08",
+        "date_key": "2026-10-26",
+        "letter_id": "baa6a6c3-c10f-46b5-85c1-bd8cc6849bd8",
+        "channel_used": "GMAIL",
+        "provider_message_id": "mock-test-msg-123",
+        "delivery_status": "SENT",
+        "provider_response": "OK Mock",
+        "sent_at": "2026-10-26 18:18:24",
+        "error_message": null,
+        "is_test": 1
+      },
+      {
+        "id": "6d8250eb-b800-4035-a04a-3926c665e5f4",
         "date_key": "2099-12-31",
-        "letter_id": "6f053130-bb49-4561-b625-7d8f261ec6cd",
+        "letter_id": "fdc0db05-e8a9-4bd2-884d-80f3f12044ab",
         "channel_used": "GMAIL",
         "provider_message_id": "mock-first-run-id",
         "delivery_status": "SENT",
         "provider_response": "OK Mock",
-        "sent_at": "2026-10-26 03:37:10",
+        "sent_at": "2026-10-26 18:18:24",
+        "error_message": null,
+        "is_test": 0
+      },
+      {
+        "id": "f705742f-b2ef-4d25-8f3a-3308a027dbad",
+        "date_key": "2026-10-26",
+        "letter_id": "22631fb5-c145-431f-9dcc-c7f4bd3d6709",
+        "channel_used": "WHATSAPP",
+        "provider_message_id": "wa-test-mock-1793038705087",
+        "delivery_status": "SENT",
+        "provider_response": "{\"mode\":\"TEST_MOCK\"}",
+        "sent_at": "2026-10-26 18:18:25",
         "error_message": null,
         "is_test": 0
       }
@@ -910,6 +960,34 @@
         "color": "#60A5FA",
         "birth_order": 376,
         "created_at": "2026-10-26 03:37:10"
+      },
+      {
+        "id": "cac230e3-5e80-4ad0-813d-797a140039cd",
+        "letter_id": "fdc0db05-e8a9-4bd2-884d-80f3f12044ab",
+        "element_type": "STAR",
+        "variety": "GOLDEN_STELLA",
+        "pos_x": -17.17361160742188,
+        "pos_y": 35.875,
+        "pos_z": 9.95245896034867,
+        "rot_y": 0,
+        "scale": 1.2000000000000002,
+        "color": "#FDE047",
+        "birth_order": 377,
+        "created_at": "2026-10-26 18:18:24"
+      },
+      {
+        "id": "1b746d92-b6e6-475e-b231-f0056139263e",
+        "letter_id": "22631fb5-c145-431f-9dcc-c7f4bd3d6709",
+        "element_type": "STAR",
+        "variety": "PINK_NEBULA_STAR",
+        "pos_x": 26.463694682634117,
+        "pos_y": 46.71,
+        "pos_z": 5.817969039477855,
+        "rot_y": 0,
+        "scale": 0.9,
+        "color": "#F472B6",
+        "birth_order": 378,
+        "created_at": "2026-10-26 18:18:25"
       }
     ],
     "admin_users": [

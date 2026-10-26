@@ -57,6 +57,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     }
   }, [isOpen, isAuthenticated]);
 
+  // Refresh WhatsApp status on tab switch
+  useEffect(() => {
+    if (isOpen && isAuthenticated && activeTab === 'INTEGRACIONES') {
+      api.getWhatsAppWebStatus().then(setWaWebInfo).catch(() => null);
+    }
+  }, [activeTab, isOpen, isAuthenticated]);
+
   // Polling for QR scan & WhatsApp Web connection status
   useEffect(() => {
     let interval: any = null;
@@ -767,9 +774,20 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                           <p>3. Toca <b>Vincular un dispositivo</b> y apunta la cámara a este código.</p>
                         </div>
 
-                        <div className="flex items-center justify-center gap-2 text-xs text-slate-400">
-                          <RefreshCw className="w-3.5 h-3.5 animate-spin text-amber-400" />
-                          <span>Esperando que escanees el código QR...</span>
+                        <div className="flex flex-col items-center justify-center gap-1.5 text-xs text-slate-400">
+                          <div className="flex items-center gap-2">
+                            <RefreshCw className="w-3.5 h-3.5 animate-spin text-amber-400" />
+                            <span>Esperando que escanees el código QR...</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={handleStartWaWeb}
+                            disabled={isStartingWaWeb}
+                            className="mt-1 text-[11px] text-amber-300/80 hover:text-amber-200 underline inline-flex items-center gap-1"
+                          >
+                            <RefreshCw className="w-3 h-3" />
+                            <span>¿El código expiró? Haz clic para generar uno nuevo</span>
+                          </button>
                         </div>
                       </div>
                     ) : waWebInfo?.status === 'CONNECTING' ? (

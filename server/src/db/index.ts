@@ -35,6 +35,15 @@ export function getDatabase(): Database.Database {
     // Column already exists
   }
 
+  // Ensure whatsapp_sessions table exists for persistent multi-device session auth
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS whatsapp_sessions (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    )
+  `);
+
   // Auto-restore from cloud snapshot if running on a new PC or fresh deployment
   BackupService.autoRestoreIfEmpty(db);
 
