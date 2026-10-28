@@ -139,17 +139,17 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     }
   };
 
-  const handleTriggerDailyDispatch = async () => {
+  const handleTriggerDailyDispatch = async (forceResend: boolean = false) => {
     setIsLoading(true);
     setConfirmManualDispatch(false);
     try {
-      const result = await api.triggerDailyDispatch();
+      const result = await api.triggerDailyDispatch(forceResend);
       if (result.success) {
         setNotification({
           type: 'success',
           message: result.flowerCreated
             ? '¡Carta diaria enviada con éxito! Se añadió una flor al jardín.'
-            : (result.error || 'Proceso completado.')
+            : (result.error || '¡Carta de hoy enviada con éxito a WhatsApp!')
         });
       } else {
         setNotification({ type: 'error', message: `Envío fallido: ${result.error}` });
@@ -546,19 +546,29 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     <p className="text-xs text-slate-400">
                       Dispara de inmediato el flujo de envío de la carta de hoy. Si hoy ya se envió una carta, el sistema respetará la idempotencia y no enviará un duplicado.
                     </p>
-                    <div className="pt-2">
+                    <div className="pt-2 flex flex-wrap items-center gap-2">
                       {!confirmManualDispatch ? (
-                        <button
-                          onClick={() => setConfirmManualDispatch(true)}
-                          className="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-medium flex items-center gap-2"
-                        >
-                          <Play className="w-3.5 h-3.5 fill-current" />
-                          <span>Enviar Carta de Hoy Ahora</span>
-                        </button>
+                        <>
+                          <button
+                            onClick={() => setConfirmManualDispatch(true)}
+                            className="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-medium flex items-center gap-2"
+                          >
+                            <Play className="w-3.5 h-3.5 fill-current" />
+                            <span>Enviar Carta de Hoy Ahora</span>
+                          </button>
+                          <button
+                            onClick={() => handleTriggerDailyDispatch(true)}
+                            className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-rose-300 border border-rose-900/40 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors"
+                            title="Reenvía la carta de hoy por WhatsApp si hubo problemas de desencriptación"
+                          >
+                            <RefreshCw className="w-3.5 h-3.5" />
+                            <span>Reenviar Carta de Hoy</span>
+                          </button>
+                        </>
                       ) : (
                         <div className="flex items-center gap-2">
                           <button
-                            onClick={handleTriggerDailyDispatch}
+                            onClick={() => handleTriggerDailyDispatch(false)}
                             className="px-4 py-2 bg-rose-700 hover:bg-rose-600 text-white rounded-lg text-xs font-bold"
                           >
                             Confirmar Envío Inmediato
@@ -779,6 +789,15 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                           >
                             {isTestingWaWeb ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
                             <span>Enviar Mensaje de Prueba a mi Pareja Ahora</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleTriggerDailyDispatch(true)}
+                            className="px-3.5 py-2 bg-rose-700 hover:bg-rose-600 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-sm"
+                            title="Reenvía la carta de amor programada para hoy directamente a su celular"
+                          >
+                            <Send className="w-3.5 h-3.5" />
+                            <span>Reenviar Carta de Hoy a su WhatsApp</span>
                           </button>
                           <button
                             type="button"

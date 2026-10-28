@@ -1,10 +1,10 @@
 {
   "version": "1.0",
-  "exportedAt": "2026-10-26T18:39:20.501Z",
+  "exportedAt": "2026-10-28T00:46:23.786Z",
   "metadata": {
-    "totalLetters": 41,
-    "totalFlowers": 22,
-    "totalLogs": 27
+    "totalLetters": 43,
+    "totalFlowers": 24,
+    "totalLogs": 29
   },
   "tables": {
     "settings": [
@@ -22,7 +22,7 @@
         "is_active": 1,
         "ai_enabled": 0,
         "signature_name": "Por siempre tuyo",
-        "updated_at": "2026-10-26 18:39:20",
+        "updated_at": "2026-10-28 00:46:23",
         "recipient_access_code": "amor2026",
         "public_web_url": "https://mi-vida-eterna.onrender.com"
       }
@@ -557,7 +557,33 @@
         "source": "LIBRARY",
         "created_at": "2026-10-26 18:39:19",
         "scheduled_for": "2026-10-26",
-        "status": "SCHEDULED",
+        "status": "SENT",
+        "attempt_count": 0,
+        "last_error": null
+      },
+      {
+        "id": "ba3157ac-800e-4895-9dfb-ff91ba34411d",
+        "category": "Amor profundo",
+        "title": "Prueba 1",
+        "content": "Eres la persona más maravillosa del universo 0a3e2998.",
+        "normalized_hash": "427de8ca3adc7babf1681ee63f7a5cde58d640b41f858102226a4eef1621e542",
+        "source": "MANUAL",
+        "created_at": "2026-10-28 00:46:23",
+        "scheduled_for": "2026-10-28",
+        "status": "SENT",
+        "attempt_count": 0,
+        "last_error": null
+      },
+      {
+        "id": "46fa6647-7079-4390-b88e-1bca844da614",
+        "category": "Admiración por su personalidad",
+        "title": "Tu luz auténtica",
+        "content": "Admiro tu autenticidad inquebrantable. En un mundo donde muchos pretenden ser lo que no son, tú te muestras con una verdad cristalina y hermosa. Tu fortaleza silenciosa y tu generosidad me enamoran más con cada día que pasa.",
+        "normalized_hash": "a203a38f11c32911964132f2cdd94806fc53d62709a2d092820246dd40ebb018",
+        "source": "LIBRARY",
+        "created_at": "2026-10-28 00:46:23",
+        "scheduled_for": "2026-10-28",
+        "status": "SENT",
         "attempt_count": 0,
         "last_error": null
       }
@@ -876,14 +902,38 @@
         "is_test": 1
       },
       {
-        "id": "d6ce0e70-f356-42a8-9436-eb36fb39b241",
+        "id": "f22795bc-b9f8-4ec1-b746-a1d92ca1e74e",
+        "date_key": "2026-10-27",
+        "letter_id": "19e85380-e892-431e-89e2-539a611ad4d8",
+        "channel_used": "GMAIL",
+        "provider_message_id": "mock-test-msg-123",
+        "delivery_status": "SENT",
+        "provider_response": "OK Mock",
+        "sent_at": "2026-10-28 00:46:23",
+        "error_message": null,
+        "is_test": 1
+      },
+      {
+        "id": "89716b0c-701c-4f25-a8b8-821a4f60f6f8",
         "date_key": "2099-12-31",
-        "letter_id": "15b8f8ea-0e03-4de7-91c8-ef012c30d9a0",
+        "letter_id": "ba3157ac-800e-4895-9dfb-ff91ba34411d",
         "channel_used": "GMAIL",
         "provider_message_id": "mock-first-run-id",
         "delivery_status": "SENT",
         "provider_response": "OK Mock",
-        "sent_at": "2026-10-26 18:39:20",
+        "sent_at": "2026-10-28 00:46:23",
+        "error_message": null,
+        "is_test": 0
+      },
+      {
+        "id": "5db5113b-0cba-4163-9536-ea8a3ca447ff",
+        "date_key": "2026-10-27",
+        "letter_id": "46fa6647-7079-4390-b88e-1bca844da614",
+        "channel_used": "WHATSAPP",
+        "provider_message_id": "wa-test-mock-1793148383770",
+        "delivery_status": "SENT",
+        "provider_response": "{\"mode\":\"TEST_MOCK\"}",
+        "sent_at": "2026-10-28 00:46:23",
         "error_message": null,
         "is_test": 0
       }
@@ -1196,6 +1246,34 @@
         "color": "#FDE047",
         "birth_order": 382,
         "created_at": "2026-10-26 18:39:20"
+      },
+      {
+        "id": "12af295a-9a11-4425-8e2f-fca027b2086a",
+        "letter_id": "ba3157ac-800e-4895-9dfb-ff91ba34411d",
+        "element_type": "STAR",
+        "variety": "PINK_NEBULA_STAR",
+        "pos_x": 18.072514695030822,
+        "pos_y": 35.86,
+        "pos_z": 17.984565955226582,
+        "rot_y": 0,
+        "scale": 1.4,
+        "color": "#F472B6",
+        "birth_order": 383,
+        "created_at": "2026-10-28 00:46:23"
+      },
+      {
+        "id": "90bd3467-b911-4cc6-92bf-fdffa9d08d86",
+        "letter_id": "46fa6647-7079-4390-b88e-1bca844da614",
+        "element_type": "STAR",
+        "variety": "VIOLET_SUPERNOVA",
+        "pos_x": -1.5620406144916867,
+        "pos_y": 45.885,
+        "pos_z": -33.78056843983948,
+        "rot_y": 0,
+        "scale": 1.1,
+        "color": "#C084FC",
+        "birth_order": 384,
+        "created_at": "2026-10-28 00:46:23"
       }
     ],
     "admin_users": [

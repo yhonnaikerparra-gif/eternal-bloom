@@ -35,13 +35,22 @@ export function getDatabase(): Database.Database {
     // Column already exists
   }
 
-  // Ensure whatsapp_sessions table exists for persistent multi-device session auth
+  // Ensure whatsapp_sessions and whatsapp_messages tables exist
   db.exec(`
     CREATE TABLE IF NOT EXISTS whatsapp_sessions (
       key TEXT PRIMARY KEY,
       value TEXT NOT NULL,
       updated_at TEXT NOT NULL
-    )
+    );
+
+    CREATE TABLE IF NOT EXISTS whatsapp_messages (
+      id TEXT PRIMARY KEY,
+      remote_jid TEXT,
+      message_json TEXT NOT NULL,
+      created_at TEXT NOT NULL
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_whatsapp_messages_created ON whatsapp_messages(created_at);
   `);
 
   // Auto-restore from cloud snapshot if running on a new PC or fresh deployment

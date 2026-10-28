@@ -80,6 +80,14 @@ CREATE TABLE IF NOT EXISTS whatsapp_sessions (
   updated_at TEXT NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS whatsapp_messages (
+  id TEXT PRIMARY KEY,
+  remote_jid TEXT,
+  message_json TEXT NOT NULL,
+  created_at TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_whatsapp_messages_created ON whatsapp_messages(created_at);
 CREATE INDEX IF NOT EXISTS idx_letters_status ON letters(status);
 CREATE INDEX IF NOT EXISTS idx_letters_normalized_hash ON letters(normalized_hash);
 CREATE INDEX IF NOT EXISTS idx_dispatch_logs_date_key ON dispatch_logs(date_key);

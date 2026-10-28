@@ -87,10 +87,11 @@ adminRouter.get('/scheduler', (req: Request, res: Response): void => {
   res.json(nextRun);
 });
 
-// Trigger daily dispatch immediately
+// Trigger daily dispatch immediately (supports optional forceResend)
 adminRouter.post('/dispatch/trigger', async (req: Request, res: Response): Promise<void> => {
   try {
-    const result = await Dispatcher.executeDailyDispatch();
+    const forceResend = Boolean(req.body?.forceResend);
+    const result = await Dispatcher.executeDailyDispatch({ forceResend });
     res.json(result);
   } catch (error: any) {
     res.status(500).json({ error: error.message });

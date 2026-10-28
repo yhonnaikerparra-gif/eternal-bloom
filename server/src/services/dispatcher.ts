@@ -57,6 +57,7 @@ export class Dispatcher {
     forceDateKey?: string;
     isTest?: boolean;
     overrideChannel?: 'GMAIL' | 'WHATSAPP';
+    forceResend?: boolean;
   } = {}): Promise<DispatchResult> {
     const db = getDatabase();
     const isTest = options.isTest || false;
@@ -98,7 +99,7 @@ export class Dispatcher {
       const friendlyDate = this.getFriendlyDateString(timezone);
 
       // 2. Check Idempotency for non-test runs: has a message already been sent today?
-      if (!isTest) {
+      if (!isTest && !options.forceResend) {
         const alreadySent = db.prepare(`
           SELECT id, letter_id FROM dispatch_logs 
           WHERE date_key = ? AND delivery_status = 'SENT' AND is_test = 0
@@ -121,39 +122,55 @@ export class Dispatcher {
       // 3. Obtain or select a strictly unique letter
       let letter: { id: string; title: string; category: string; content: string; source: string };
 
-      // Check if there is an existing scheduled letter for today (e.g. from an earlier interrupted run)
-      const existingScheduled = db.prepare(`
-        SELECT * FROM letters 
-        WHERE (scheduled_for = ? OR status = 'SCHEDULED') AND status != 'SENT'
-        ORDER BY created_at ASC LIMIT 1
-      `).get(dateKey) as any;
+      if (options.forceResend) {
+        const existingSent = db.prepare(`
+          SELECT letter_id FROM dispatch_logs 
+          WHERE date_key = ? AND delivery_status = 'SENT' AND is_test = 0
+          ORDER BY sent_at DESC LIMIT 1
+        `).get(dateKey) as { letter_id: string } | undefined;
+        if (existingSent) {
+          const l = db.prepare('SELECT * FROM letters WHERE id = ?').get(existingSent.letter_id) as any;
+          if (l) {
+            letter = l;
+          }
+        }
+      }
 
-      if (existingScheduled) {
-        letter = existingScheduled;
-      } else {
-        // Generate or select a brand new unique letter
-        const newLetter = await LetterEngine.getNextUniqueLetter(
-          settings.recipient_name,
-          settings.recipient_nickname,
-          Boolean(settings.ai_enabled)
-        );
+      if (!letter!) {
+        // Check if there is an existing scheduled letter for today (e.g. from an earlier interrupted run)
+        const existingScheduled = db.prepare(`
+          SELECT * FROM letters 
+          WHERE (scheduled_for = ? OR status = 'SCHEDULED') AND status != 'SENT'
+          ORDER BY created_at ASC LIMIT 1
+        `).get(dateKey) as any;
 
-        const stored = LetterEngine.storeLetter({
-          category: newLetter.category,
-          title: newLetter.title,
-          content: newLetter.content,
-          source: newLetter.source,
-          scheduledFor: dateKey,
-          status: 'SCHEDULED'
-        });
+        if (existingScheduled) {
+          letter = existingScheduled;
+        } else {
+          // Generate or select a brand new unique letter
+          const newLetter = await LetterEngine.getNextUniqueLetter(
+            settings.recipient_name,
+            settings.recipient_nickname,
+            Boolean(settings.ai_enabled)
+          );
 
-        letter = {
-          id: stored.id,
-          title: newLetter.title,
-          category: newLetter.category,
-          content: newLetter.content,
-          source: newLetter.source
-        };
+          const stored = LetterEngine.storeLetter({
+            category: newLetter.category,
+            title: newLetter.title,
+            content: newLetter.content,
+            source: newLetter.source,
+            scheduledFor: dateKey,
+            status: 'SCHEDULED'
+          });
+
+          letter = {
+            id: stored.id,
+            title: newLetter.title,
+            category: newLetter.category,
+            content: newLetter.content,
+            source: newLetter.source
+          };
+        }
       }
 
       // 4. Determine dispatch channel (Defaulting to WhatsApp)
@@ -214,22 +231,30 @@ export class Dispatcher {
       const deliveryStatus = sendSuccess ? 'SENT' : 'FAILED';
 
       // 6. Record real provider response in database
-      db.prepare(`
-        INSERT INTO dispatch_logs (
-          id, date_key, letter_id, channel_used, provider_message_id,
-          delivery_status, provider_response, sent_at, error_message, is_test
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'), ?, ?)
-      `).run(
-        logId,
-        dateKey,
-        letter.id,
-        channel,
-        providerMessageId || null,
-        deliveryStatus,
-        providerResponseStr || null,
-        deliveryError || null,
-        isTest ? 1 : 0
-      );
+      if (options.forceResend) {
+        db.prepare(`
+          UPDATE dispatch_logs 
+          SET provider_message_id = ?, provider_response = ?, sent_at = datetime('now'), delivery_status = ?, error_message = ?
+          WHERE date_key = ? AND delivery_status = 'SENT' AND is_test = 0
+        `).run(providerMessageId || null, providerResponseStr || null, deliveryStatus, deliveryError || null, dateKey);
+      } else {
+        db.prepare(`
+          INSERT INTO dispatch_logs (
+            id, date_key, letter_id, channel_used, provider_message_id,
+            delivery_status, provider_response, sent_at, error_message, is_test
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'), ?, ?)
+        `).run(
+          logId,
+          dateKey,
+          letter.id,
+          channel,
+          providerMessageId || null,
+          deliveryStatus,
+          providerResponseStr || null,
+          deliveryError || null,
+          isTest ? 1 : 0
+        );
+      }
 
       // 7. If sent successfully: update letter status & strictly create exactly 1 flower/star
       let flowerCreated = false;
@@ -242,22 +267,27 @@ export class Dispatcher {
           WHERE id = ?
         `).run(letter.id);
 
-        // ONLY non-test dispatches create visual elements!
+        // ONLY non-test dispatches create visual elements (and avoid duplicate flower for same letter on resend)
         if (!isTest) {
-          const maxOrderRow = db.prepare(`
-            SELECT COALESCE(MAX(birth_order), 0) + 1 as next_order FROM garden_elements
-          `).get() as { next_order: number };
+          const existingElement = db.prepare('SELECT id FROM garden_elements WHERE letter_id = ?').get(letter.id) as any;
+          if (!existingElement) {
+            const maxOrderRow = db.prepare(`
+              SELECT COALESCE(MAX(birth_order), 0) + 1 as next_order FROM garden_elements
+            `).get() as { next_order: number };
 
-          const birthOrder = maxOrderRow.next_order; // Guarantees unique next birth order
-          const visualElement = GardenService.createVisualElementForLetter(letter.id, birthOrder);
-          flowerCreated = true;
-          elementId = visualElement.id;
+            const birthOrder = maxOrderRow.next_order; // Guarantees unique next birth order
+            const visualElement = GardenService.createVisualElementForLetter(letter.id, birthOrder);
+            flowerCreated = true;
+            elementId = visualElement.id;
 
-          // Automatically sync snapshot to cloud backup
-          try {
-            await BackupService.createBackup(db);
-          } catch (bErr) {
-            console.warn('[Dispatcher] Auto-backup notice:', bErr);
+            // Automatically sync snapshot to cloud backup
+            try {
+              await BackupService.createBackup(db);
+            } catch (bErr) {
+              console.warn('[Dispatcher] Auto-backup notice:', bErr);
+            }
+          } else {
+            elementId = existingElement.id;
           }
         }
       } else {

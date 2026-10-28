@@ -214,10 +214,11 @@ export const api = {
     return res.json();
   },
 
-  async triggerDailyDispatch(): Promise<any> {
+  async triggerDailyDispatch(forceResend?: boolean): Promise<any> {
     const res = await fetch(`${API_BASE}/admin/dispatch/trigger`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+      body: JSON.stringify({ forceResend }),
     });
     return res.json();
   },

@@ -6,7 +6,11 @@ import makeWASocket, {
   DisconnectReason,
   useMultiFileAuthState,
   fetchLatestBaileysVersion,
+  makeCacheableSignalKeyStore,
+  Browsers,
   WASocket,
+  WAMessageKey,
+  proto,
 } from '@whiskeysockets/baileys';
 import { Boom } from '@hapi/boom';
 import { config } from '../config/index.js';
@@ -35,6 +39,8 @@ export class WhatsAppWebClient {
   private static lastConnectedAt: string | undefined;
   private static reconnectTimer: NodeJS.Timeout | null = null;
   private static isConnecting = false;
+  private static sentMessageCache = new Map<string, proto.IMessage>();
+  private static retryCounterCache = new Map<string, number>();
 
   private static getSessionDir(): string {
     const authDir = path.resolve(config.dataDir, 'whatsapp_auth');
@@ -93,6 +99,78 @@ export class WhatsAppWebClient {
     } catch (e) {
       console.warn('[WhatsAppWeb] Error sincronizando sesión a base de datos:', e);
     }
+  }
+
+  /**
+   * Stores a message in SQLite and RAM so Baileys can re-transmit it when WhatsApp requests E2EE decryption retry.
+   */
+  public static saveStoredMessage(id: string, remoteJid: string, message: proto.IMessage): void {
+    if (!id || !message) return;
+    try {
+      this.sentMessageCache.set(id, message);
+
+      // Keep in-memory cache bound to 500 recent messages
+      if (this.sentMessageCache.size > 500) {
+        const firstKey = this.sentMessageCache.keys().next().value;
+        if (firstKey) this.sentMessageCache.delete(firstKey);
+      }
+
+      const db = getDatabase();
+      db.prepare(`
+        INSERT OR REPLACE INTO whatsapp_messages (id, remote_jid, message_json, created_at)
+        VALUES (?, ?, ?, datetime('now'))
+      `).run(id, remoteJid || '', JSON.stringify(message));
+    } catch (err) {
+      console.warn('[WhatsAppWeb] Error guardando mensaje para reintentos:', err);
+    }
+  }
+
+  /**
+   * Retrieves message for WhatsApp end-to-end encryption retry requests.
+   * If WhatsApp says "Waiting for this message...", it asks our client for the message content via this method.
+   */
+  public static async getMessage(key: WAMessageKey): Promise<proto.IMessage | undefined> {
+    if (!key || !key.id) return undefined;
+
+    // 1. Check in-memory RAM cache
+    if (this.sentMessageCache.has(key.id)) {
+      console.log(`[WhatsAppWeb] 🔄 Re-transmitiendo mensaje desde RAM para solicitud de desencriptación ID: ${key.id}`);
+      return this.sentMessageCache.get(key.id);
+    }
+
+    // 2. Check SQLite persistent message store
+    try {
+      const db = getDatabase();
+      const row = db.prepare('SELECT message_json FROM whatsapp_messages WHERE id = ?').get(key.id) as { message_json: string } | undefined;
+      if (row && row.message_json) {
+        console.log(`[WhatsAppWeb] 🔄 Re-transmitiendo mensaje desde SQLite para solicitud de desencriptación ID: ${key.id}`);
+        const parsed = JSON.parse(row.message_json);
+        this.sentMessageCache.set(key.id, parsed);
+        return parsed;
+      }
+
+      // 3. Fallback: check recent dispatch_logs or letters for today
+      const logRow = db.prepare(`
+        SELECT l.title, l.content, s.signature_name, s.recipient_name, s.public_web_url
+        FROM dispatch_logs d
+        JOIN letters l ON d.letter_id = l.id
+        JOIN settings s ON s.id = 1
+        WHERE d.provider_message_id = ?
+        ORDER BY d.sent_at DESC LIMIT 1
+      `).get(key.id) as any;
+
+      if (logRow) {
+        const publicUrl = logRow.public_web_url || 'https://amor-de-mi-vida-llxh.onrender.com';
+        const msgText = `🌸 *MI VIDA ETERNA* 🌸\n\n*${logRow.title}*\n\nQuerida ${logRow.recipient_name},\n\n"${logRow.content}"\n\n🌹 *Una nueva flor ha florecido hoy para ti en nuestro jardín eterno.*\n\n✨ Entra a nuestro mundo:\n👉 ${publicUrl}\n\nCon todo mi corazón,\n*${logRow.signature_name}* ❤️`;
+        return {
+          conversation: msgText
+        };
+      }
+    } catch (err) {
+      console.warn('[WhatsAppWeb] Error recuperando mensaje en getMessage:', err);
+    }
+
+    return undefined;
   }
 
   public static hasSavedSession(): boolean {
@@ -167,20 +245,42 @@ export class WhatsAppWebClient {
 
       const logger = pino({ level: 'silent' });
 
+      // Wrap state.keys.set so any key updates or rotations are immediately persisted to SQLite
+      const originalKeysSet = state.keys.set;
+      state.keys.set = async (data: any) => {
+        await originalKeysSet(data);
+        WhatsAppWebClient.syncSessionToDatabase(sessionDir);
+      };
+
+      const msgRetryCounterCache = {
+        get: (k: string) => WhatsAppWebClient.retryCounterCache.get(k),
+        set: (k: string, v: number) => { WhatsAppWebClient.retryCounterCache.set(k, v); },
+        del: (k: string) => { WhatsAppWebClient.retryCounterCache.delete(k); },
+        delete: (k: string) => { WhatsAppWebClient.retryCounterCache.delete(k); }
+      };
+
       // Clean existing socket listeners if any
       if (this.socket) {
         try {
           this.socket.ev.removeAllListeners('connection.update');
           this.socket.ev.removeAllListeners('creds.update');
+          this.socket.ev.removeAllListeners('messages.upsert');
         } catch {}
       }
 
       const sock = makeWASocket({
         version,
         logger,
-        auth: state,
-        printQRInTerminal: false,
-        browser: ['MI VIDA ETERNA', 'Chrome', '1.0.0'],
+        auth: {
+          creds: state.creds,
+          keys: makeCacheableSignalKeyStore(state.keys, logger),
+        },
+        msgRetryCounterCache: msgRetryCounterCache as any,
+        getMessage: async (key: WAMessageKey) => {
+          return await WhatsAppWebClient.getMessage(key);
+        },
+        browser: Browsers.appropriate('Chrome'),
+        markOnlineOnConnect: true,
         connectTimeoutMs: 60000,
         defaultQueryTimeoutMs: 60000,
         keepAliveIntervalMs: 25000,
@@ -194,6 +294,15 @@ export class WhatsAppWebClient {
       sock.ev.on('creds.update', async () => {
         await saveCreds();
         WhatsAppWebClient.syncSessionToDatabase(sessionDir);
+      });
+
+      // Capture all incoming & outgoing messages so getMessage can always satisfy decryption retries
+      sock.ev.on('messages.upsert', async ({ messages }: { messages: any[] }) => {
+        for (const m of messages) {
+          if (m?.key?.id && m?.message) {
+            WhatsAppWebClient.saveStoredMessage(m.key.id, m.key.remoteJid || '', m.message);
+          }
+        }
       });
 
       // Handle connection updates
@@ -356,6 +465,14 @@ export class WhatsAppWebClient {
 
       const messageId = sent?.key?.id || `msg-${Date.now()}`;
 
+      // Store message immediately in cache and SQLite so retry requests decrypt seamlessly
+      const storedMsg = sent?.message || { conversation: message };
+      this.saveStoredMessage(messageId, targetJid, storedMsg);
+
+      // Force session sync to database after successful send
+      const sessionDir = this.getSessionDir();
+      WhatsAppWebClient.syncSessionToDatabase(sessionDir);
+
       console.log(`[WhatsAppWeb] ¡Mensaje entregado exitosamente a WhatsApp! ID: ${messageId}`);
 
       return {
@@ -408,13 +525,16 @@ export class WhatsAppWebClient {
         }
       }
 
-      // Purge database session table
+      // Purge database session table and message store
       try {
         const db = getDatabase();
         db.prepare('DELETE FROM whatsapp_sessions').run();
-        console.log('[WhatsAppWeb] Sesión eliminada completamente de la base de datos.');
+        db.prepare('DELETE FROM whatsapp_messages').run();
+        this.sentMessageCache.clear();
+        this.retryCounterCache.clear();
+        console.log('[WhatsAppWeb] Sesión y mensajes eliminados completamente de la base de datos.');
       } catch (dbErr) {
-        console.warn('[WhatsAppWeb] Error limpiando tabla whatsapp_sessions:', dbErr);
+        console.warn('[WhatsAppWeb] Error limpiando tablas de WhatsApp:', dbErr);
       }
     }
   }
